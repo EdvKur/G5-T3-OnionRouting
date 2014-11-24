@@ -50,6 +50,7 @@ namespace OnionRouting
             HttpListenerResponse response = context.Response;
 
             byte[] buffer = null;
+            bool success = true;
 
             if (context.Request.Url.AbsolutePath == "/status")
             {
@@ -65,25 +66,37 @@ namespace OnionRouting
 
             else // route request
             {
-                Console.WriteLine("route request received");
+                try {
+                    Console.WriteLine("route request received");
 
-                using (BinaryReader br = new BinaryReader(request.InputStream))
-                {
-                    byte[] encryptedMessage = br.ReadBytes((int)request.ContentLength64);
-                    string nextHopUrl;
-                    byte[] messageForNextHop;
-                    Messaging.unpackRequest(encryptedMessage, _rsaKeys.PrivateKey, out nextHopUrl, out messageForNextHop);
+                    using (BinaryReader br = new BinaryReader(request.InputStream))
+                    {
+                        byte[] encryptedMessage = br.ReadBytes((int)request.ContentLength64);
+                        string nextHopUrl;
+                        byte[] messageForNextHop;
+                        Messaging.unpackRequest(encryptedMessage, _rsaKeys.PrivateKey, out nextHopUrl, out messageForNextHop);
 
-                    if (messageForNextHop.Length == 0)
-                        buffer = Messaging.sendRecv(nextHopUrl);
-                    else
-                        buffer = Messaging.sendRecv(nextHopUrl, messageForNextHop);
+                        if (messageForNextHop.Length == 0)
+                            buffer = Messaging.sendRecv(nextHopUrl, out success);
+                        else
+                            buffer = Messaging.sendRecv(nextHopUrl, messageForNextHop, out success);
+                    }
                 }
+                catch
+                {
+                    success = false;
+                }
+
+                if (!success)
+                    Console.WriteLine("error while handling route request");
             }
 
-            response.ContentLength64 = buffer.Length;
-            response.OutputStream.Write(buffer, 0, buffer.Length);
-            response.OutputStream.Close();
+            if (success)
+            {
+                response.ContentLength64 = buffer.Length;
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.OutputStream.Close();
+            }
         }
     }
 }

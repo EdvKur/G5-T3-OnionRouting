@@ -21,29 +21,80 @@ namespace OnionRouting
             return listener;
         }
 
-        public static byte[] sendRecv(string url)
+        public static byte[] sendRecv(string url, out bool success)
         {
-            HttpWebRequest req = HttpWebRequest.CreateHttp(url);
-            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-            var resStream = resp.GetResponseStream();
-            using (BinaryReader br = new BinaryReader(resStream))
-                return br.ReadBytes((int)resp.ContentLength);
+            try
+            {
+                HttpWebRequest req = HttpWebRequest.CreateHttp(url);
+                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                var resStream = resp.GetResponseStream();
+                using (BinaryReader br = new BinaryReader(resStream))
+                {
+                    byte[] result = br.ReadBytes((int)resp.ContentLength);
+                    success = true;
+                    return result;
+                }
+            }
+            catch {
+                success = false;
+                return null;
+            }
         }
 
-        public static byte[] sendRecv(string url, byte[] data)
+        public static byte[] sendRecv(string url, byte[] data, out bool success)
         {
-            HttpWebRequest req = HttpWebRequest.CreateHttp(url);
-            req.Method = "POST";
-            req.ContentType = "multipart/form-data";
-            req.ContentLength = data.Length;
+            try
+            {
+                HttpWebRequest req = HttpWebRequest.CreateHttp(url);
+                req.Method = "POST";
+                req.ContentType = "multipart/form-data";
+                req.ContentLength = data.Length;
 
-            using (var stream = req.GetRequestStream())
-                stream.Write(data, 0, data.Length);
+                using (var stream = req.GetRequestStream())
+                    stream.Write(data, 0, data.Length);
 
-            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-            var resStream = resp.GetResponseStream();
-            using (BinaryReader br = new BinaryReader(resStream))
-                return br.ReadBytes((int)resp.ContentLength);
+                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                var resStream = resp.GetResponseStream();
+                using (BinaryReader br = new BinaryReader(resStream))
+                {
+                    byte[] result = br.ReadBytes((int)resp.ContentLength);
+                    success = true;
+                    return result;
+                }
+            }
+            catch
+            {
+                success = false;
+                return null;
+            }
+        }
+
+        public static byte[] sendRecv(string url, byte[] data, int timeoutMs, out bool success)
+        {
+            try
+            {
+                HttpWebRequest req = HttpWebRequest.CreateHttp(url);
+                req.Method = "POST";
+                req.ContentType = "multipart/form-data";
+                req.ContentLength = data.Length;
+                req.Timeout = timeoutMs;
+
+                using (var stream = req.GetRequestStream())
+                    stream.Write(data, 0, data.Length);
+
+                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                var resStream = resp.GetResponseStream();
+                using (BinaryReader br = new BinaryReader(resStream))
+                {
+                    byte[] result = br.ReadBytes((int)resp.ContentLength);
+                    success = true;
+                    return result;
+                }
+            }
+            catch {
+                success = false; 
+                return null;
+            }
         }
 
         public static byte[] buildRequest(String url, List<ChainNodeData> chain)

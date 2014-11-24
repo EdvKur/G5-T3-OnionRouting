@@ -64,11 +64,24 @@ namespace OnionRouting
 
         static void discoverChainNodes()
         {
+            Console.WriteLine("Discovering chain nodes");
+
             for (int i = 9000; i < 9006; i++)
             {
+                bool success;
                 string url = "http://localhost:" + i;
-                string xml = Encoding.UTF8.GetString(Messaging.sendRecv(url + "/key"));
-                _chainNodes.Add(new ChainNodeData(url, xml));
+
+                byte[] response = Messaging.sendRecv(url + "/key", out success);
+
+                if (success)
+                {
+                    string xml = Encoding.UTF8.GetString(response);
+                    _chainNodes.Add(new ChainNodeData(url, xml));
+                    
+                    Console.WriteLine("chain node at " + url + " discovered");
+                }
+                else
+                    Console.WriteLine("chain node at " + url + " not available");
             }
         }
         
