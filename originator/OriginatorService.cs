@@ -29,24 +29,34 @@ namespace OnionRouting
             {
                 Console.Write("Press enter to request a quote... ");
                 Console.ReadLine();
-
-                var chain = requestChain();
-                if (chain == null)
+                                
+                int retry = 1;
+                while (retry <= 5)
                 {
-                    Console.WriteLine("failed to retrieve chain, directory node currently not available");
-                }
-                else
-                {
-                    byte[] requestData = Messaging.buildRequest(_quoteServiceUrl, chain);
-
-                    bool success;
-                    byte[] responseData = Messaging.sendRecv(chain[0].Url, requestData, 1500, out success);
-                    if (success)
-                        Console.WriteLine(Encoding.UTF8.GetString(responseData));
+                    var chain = requestChain();
+                    if (chain == null)
+                        Console.WriteLine("failed to retrieve chain ({0}/5 attempts)", retry);
+                    
                     else
-                        Console.WriteLine("error routing request... retrying (TODO)");
+                    {
+                        bool success;
+                        byte[] requestData = Messaging.buildRequest(_quoteServiceUrl, chain);
+                        byte[] responseData = Messaging.sendRecv(chain[0].Url, requestData, 1500, out success);
 
+                        if (success)
+                        {
+                            Console.WriteLine(Encoding.UTF8.GetString(responseData));
+                            break;
+                        }
+                        else
+                            Console.WriteLine("error routing request ({0}/5 attempts)", retry);
+                    }
+                    retry++;
                 }
+
+                if (retry > 5)
+                    Console.WriteLine("request aborted!");
+
                 Console.WriteLine();
             }
         }
