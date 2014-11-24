@@ -19,12 +19,11 @@ namespace OnionRouting
         {
             parseArgs(args);
 
-            Console.Write("generating public/private key... ");
+            Log.info("generating public/private key");
             _rsaKeys = Crypto.generateKey();
-            Console.WriteLine("done!");
 
             HttpListener listener = Messaging.createListener(_port, "status", "key", "route");
-            Console.WriteLine("chain node up and running (port {0})", _port);
+            Log.info("chain node up and running (port {0})", _port);
 
             while (true)
             {
@@ -54,32 +53,38 @@ namespace OnionRouting
 
             if (context.Request.Url.AbsolutePath == "/status")
             {
-                Console.WriteLine("status request received");
+                Log.info("handling incoming status request from {0}", context.Request.RemoteEndPoint);
                 buffer = Encoding.UTF8.GetBytes("online");
             }
 
             else if (context.Request.Url.AbsolutePath == "/key")
             {
-                Console.WriteLine("key request received");
+                Log.info("handling incoming key request from {0}", context.Request.RemoteEndPoint);
                 buffer = Encoding.UTF8.GetBytes(_rsaKeys.PublicKeyXML);
             }
 
             else // route request
             {
                 try {
-                    Console.WriteLine("route request received");
-
                     using (BinaryReader br = new BinaryReader(request.InputStream))
                     {
                         byte[] encryptedMessage = br.ReadBytes((int)request.ContentLength64);
                         string nextHopUrl;
                         byte[] messageForNextHop;
-                        Messaging.unpackRequest(encryptedMessage, _rsaKeys.PrivateKey, out nextHopUrl, out messageForNextHop);
+                        RSAParameters originPublicKey;
+                        Messaging.unpackRequest(encryptedMessage, _rsaKeys.PrivateKey, out nextHopUrl, out originPublicKey, out messageForNextHop);
+
+                        string nextHopEP = nextHopUrl.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)[1];
+                        Log.info("routing request from {0} to {1}", context.Request.RemoteEndPoint, nextHopEP);
 
                         if (messageForNextHop.Length == 0)
                             buffer = Messaging.sendRecv(nextHopUrl, out success);
                         else
                             buffer = Messaging.sendRecv(nextHopUrl, messageForNextHop, out success);
+
+                        Log.info("routing response from {0} to {1}", nextHopEP, context.Request.RemoteEndPoint);
+
+                        buffer = Crypto.encrypt(buffer, originPublicKey);
                     }
                 }
                 catch
@@ -88,7 +93,7 @@ namespace OnionRouting
                 }
 
                 if (!success)
-                    Console.WriteLine("error while handling route request");
+                    Log.error("error while handling route request");
             }
 
             if (success)

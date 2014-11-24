@@ -23,7 +23,7 @@ namespace OnionRouting
         public ChainNodeData(String url, String publicKeyXml)
         {        
             Url = url;
-            PublicKey = Crypto.parseKey(publicKeyXml); ;
+            PublicKey = Crypto.importKey(publicKeyXml); ;
             PublicKeyXml = publicKeyXml;
         }
     }

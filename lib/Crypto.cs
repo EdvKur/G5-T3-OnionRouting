@@ -94,7 +94,7 @@ namespace OnionRouting
             }
         }
 
-        public static RSAParameters parseKey(string keyXML)
+        public static RSAParameters importKey(string keyXML)
         {
             using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
             {
@@ -109,6 +109,24 @@ namespace OnionRouting
             {
                 rsa.ImportParameters(key);
                 return rsa.ToXmlString(includePrivate);
+            }
+        }
+
+        public static RSAParameters importKey(byte[] keyCsp)
+        {
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+            {
+                rsa.ImportCspBlob(keyCsp);
+                return rsa.ExportParameters(false);
+            }
+        }
+
+        public static byte[] exportKeyBinary(RSAParameters key, bool includePrivate = false)
+        {
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+            {
+                rsa.ImportParameters(key);
+                return rsa.ExportCspBlob(includePrivate);
             }
         }
     }

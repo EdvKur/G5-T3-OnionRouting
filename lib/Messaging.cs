@@ -141,5 +141,59 @@ namespace OnionRouting
             }
         }
 
+
+
+
+
+        public static byte[] buildRequest(String url, List<ChainNodeData> chain, RSAParameters originPublicKey)
+        {
+            byte[] data = null;
+
+            for (int i = chain.Count - 1; i >= 0; i--)
+            {
+                data = packRequest(url, data, chain[i].PublicKey, originPublicKey);
+                url = chain[i].Url;
+            }
+            return data;
+        }
+
+        public static byte[] packRequest(String url, byte[] data, RSAParameters keyForEncryption, RSAParameters originPublicKey)
+        {
+            if (data == null)
+                data = new byte[0];
+
+            byte[] encodedUrl = Encoding.UTF8.GetBytes(url);
+            byte[] originPublicKeyBytes = Crypto.exportKeyBinary(originPublicKey);
+
+            using (MemoryStream ms = new MemoryStream(8 + encodedUrl.Length + originPublicKeyBytes.Length + data.Length))
+            {
+                using (BinaryWriter bw = new BinaryWriter(ms))
+                {
+                    bw.Write(encodedUrl.Length);
+                    bw.Write(encodedUrl);
+                    bw.Write(originPublicKeyBytes.Length);
+                    bw.Write(originPublicKeyBytes);
+                    bw.Write(data);
+
+                    return Crypto.encrypt(ms.ToArray(), keyForEncryption);
+                }
+            }
+        }
+
+        public static void unpackRequest(byte[] packed, RSAParameters key, out String unpackedUrl, out RSAParameters originPublicKey, out byte[] unpackedData)
+        {
+            using (MemoryStream ms = new MemoryStream(Crypto.decrypt(packed, key)))
+            {
+                using (BinaryReader br = new BinaryReader(ms))
+                {
+                    unpackedUrl     = Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt32()));
+                    originPublicKey = Crypto.importKey(br.ReadBytes(br.ReadInt32()));
+                    unpackedData    = br.ReadBytes((int)(ms.Length - ms.Position));
+                }
+            }
+        }
+
+
+
     }
 }

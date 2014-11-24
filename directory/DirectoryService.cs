@@ -15,8 +15,8 @@ namespace OnionRouting
         static int _port = 8000;
         static int _chainLength = 3;
         static int _targetChainNodeCount = 6;
-        static int _aliveCheckInterval   = 10000;
-        static int _aliveCheckTimeout    = 3000;
+        static int _aliveCheckInterval   = 5000;
+        static int _aliveCheckTimeout    = 1000;
 
         static List<ChainNodeData> _chainNodes = new List<ChainNodeData>();      // <IP:Port, PublicKey in Base64>
         static Random _rng = new Random();
@@ -28,16 +28,14 @@ namespace OnionRouting
             new Thread(aliveCheck).Start();
             HttpListener listener = Messaging.createListener(_port, "chain");
 
-            Console.WriteLine("directory node up and running (port {0})", _port);
-            Console.WriteLine();
-
-
+            Log.info("directory node up and running (port {0})", _port);
+            
             while (true)
             {
                 HttpListenerContext context = listener.GetContext();
                 HttpListenerResponse response = context.Response;
 
-                Console.WriteLine("chain request received");
+                Log.info("handing incoming chain request from {0}", context.Request.RemoteEndPoint);
 
                 StringBuilder responseData = new StringBuilder();
 
@@ -64,7 +62,7 @@ namespace OnionRouting
 
         static void discoverChainNodes()
         {
-            Console.WriteLine("Discovering chain nodes");
+            Log.info("discovering chain nodes");
 
             for (int i = 9000; i < 9006; i++)
             {
@@ -77,11 +75,11 @@ namespace OnionRouting
                 {
                     string xml = Encoding.UTF8.GetString(response);
                     _chainNodes.Add(new ChainNodeData(url, xml));
-                    
-                    Console.WriteLine("chain node at " + url + " discovered");
+
+                    Log.info("chain node at " + url.Substring(7) + " discovered");
                 }
                 else
-                    Console.WriteLine("chain node at " + url + " not available");
+                    Log.error("chain node at " + url.Substring(7) + " unavailable");
             }
         }
         
@@ -115,7 +113,7 @@ namespace OnionRouting
                 {
                     if (!tasks[i].IsCompleted)
                     {
-                        Console.WriteLine("Chain node at {0} gone offline!", _chainNodes[j].Url);
+                        Log.info("chain node at {0} gone offline!", _chainNodes[j].Url.Substring(7));
                         lock (_chainNodes)
                         {
                             _chainNodes.RemoveAt(j);
@@ -125,7 +123,7 @@ namespace OnionRouting
                     j++;
                 }
 
-                Console.WriteLine("chain node status checked");
+                Log.info("status of all chain nodes checked");
                 Thread.Sleep(_aliveCheckInterval - _aliveCheckTimeout);
             }
         }

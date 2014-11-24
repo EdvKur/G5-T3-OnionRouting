@@ -17,9 +17,8 @@ namespace OnionRouting
         static void Main(string[] args)
         {
             HttpListener listener = Messaging.createListener(_port, "quote");            
-            Console.WriteLine("quote service up and running (port {0})", _port);
-            Console.WriteLine();
-
+            Log.info("quote service up and running (port {0})", _port);
+           
             while (true)
             {
                 HttpListenerContext context = listener.GetContext();
@@ -31,7 +30,7 @@ namespace OnionRouting
                 response.OutputStream.Write(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
 
-                Console.WriteLine("{0}: quote requested from {1}", DateTime.Now.ToShortTimeString(), context.Request.RemoteEndPoint);
+                Log.info("handling incoming quote request from {0}", context.Request.RemoteEndPoint);
             }
         }
 

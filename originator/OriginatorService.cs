@@ -15,52 +15,83 @@ namespace OnionRouting
         static int _port;
         static string _directoryServiceUrl;
         static string _quoteServiceUrl;
+        static RSAKeyPair _rsaKeys;
                 
         static void Main(string[] args)
-        {
+        {           
             parseArgs(args);
-
-            Console.WriteLine("originator up and running (port {0})", _port);
-            Console.WriteLine();
-
+                        
+            Log.info("originator up and running (port {0})", _port);
             new Thread(handleRequests).Start();
             
             while (true)
             {
-                Console.Write("Press enter to request a quote... ");
-                Console.ReadLine();
-                                
-                int retry = 1;
-                while (retry <= 5)
-                {
-                    var chain = requestChain();
-                    if (chain == null)
-                        Console.WriteLine("failed to retrieve chain ({0}/5 attempts)", retry);
-                    
-                    else
-                    {
-                        bool success;
-                        byte[] requestData = Messaging.buildRequest(_quoteServiceUrl, chain);
-                        byte[] responseData = Messaging.sendRecv(chain[0].Url, requestData, 1500, out success);
-
-                        if (success)
-                        {
-                            Console.WriteLine(Encoding.UTF8.GetString(responseData));
-                            break;
-                        }
-                        else
-                            Console.WriteLine("error routing request ({0}/5 attempts)", retry);
-                    }
-                    retry++;
-                }
-
-                if (retry > 5)
-                    Console.WriteLine("request aborted!");
-
                 Console.WriteLine();
+                Console.WriteLine("Press enter to request a quote... ");
+                Console.WriteLine();
+                Console.ReadKey(true);
+
+                bool success;
+                requestQuote(out success);
             }
         }
 
+        private static string requestQuote(out bool success, bool returnMetainfos = false)
+        {
+            Log.info("quote requested");
+            _rsaKeys = Crypto.generateKey();
+
+            int retry = 1;
+            while (retry <= 5)
+            {
+                var chain = requestChain();
+                if (chain == null)
+                    Log.error("failed to retrieve valid chain ({0}/5 attempts)", retry);
+
+                else
+                {
+                    byte[] requestData = Messaging.buildRequest(_quoteServiceUrl, chain, _rsaKeys.PublicKey);
+                    byte[] responseData = Messaging.sendRecv(chain[0].Url, requestData, 1500, out success);
+
+                    if (success)
+                    {
+                        for (int i = 0; i < chain.Count; i++)
+                            responseData = Crypto.decrypt(responseData, _rsaKeys.PrivateKey);
+                        
+                        string quote = Encoding.UTF8.GetString(responseData);
+                        Log.info("quote received: {0}", quote);
+
+                        if (returnMetainfos) return prepareMetaInfos(quote, chain);
+                        else return null;
+                    }
+                    else
+                        Log.error("error routing request ({0}/5 attempts)", retry);
+                }
+                retry++;
+            }
+
+            if (retry > 5)
+                Log.error("request aborted");
+
+            success = false;
+            return null;
+        }
+
+        private static string prepareMetaInfos(string quote, List<ChainNodeData> chain)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(quote);
+
+            foreach (var item in chain)
+                sb.AppendLine(item.Url.Split(new[]{'/'}, StringSplitOptions.RemoveEmptyEntries)[1]);
+
+            sb.AppendLine(_rsaKeys.PublicKeyXML);
+            foreach (var item in chain)
+                sb.AppendLine(item.PublicKeyXml);
+
+            return sb.ToString();
+        }
+        
         private static void handleRequests()
         {
             HttpListener listener = Messaging.createListener(_port, "handle", "ui");
@@ -81,20 +112,17 @@ namespace OnionRouting
 
                 else if (context.Request.Url.AbsolutePath == "/handle")
                 {
-                    buffer = Encoding.UTF8.GetBytes(
-                        "The reason the way of the sinner is hard is because it is so crowded.\r\n" +
-                        "IP von Entry Node\r\n" +
-                        "IP von Intermediary Node\r\n" +
-                        "IP von Exit Node\r\n" +
-                        "Nachricht von Origin nach Entry\r\n" +
-                        "Nachricht von Entry nach Intermediary\r\n" +
-                        "Nachricht von Intermediary nach Exit\r\n" +
-                        "Nachricht von Exit nach Ouote\r\n" +
-                        "Nachricht von Ouote nach Exit\r\n" +
-                        "Nachricht von Exit nach Intermediary\r\n" +
-                        "Nachricht von Intermediary nach Entry\r\n" +
-                        "Nachricht von Entry nach Origin\r\n"
-                    );                             
+                    bool success = true;
+                    string metaInfos = requestQuote(out success, true);
+
+                    if (success)
+                        buffer = Encoding.UTF8.GetBytes(metaInfos);           
+
+                    else
+                    {
+                        buffer = new byte[0];
+                        response.StatusCode = 500;
+                    }
                 }
 
                 response.ContentLength64 = buffer.Length;
@@ -135,7 +163,7 @@ namespace OnionRouting
             for (int i = 0; i < lines.Length; i += 2)
             {
                 // TODO error handling (e.g. check if responce is valid)
-                chain.Add(new ChainNodeData(lines[i], Crypto.parseKey(lines[i + 1])));
+                chain.Add(new ChainNodeData(lines[i], Crypto.importKey(lines[i + 1])));
             }
 
             return chain;
