@@ -7,7 +7,7 @@
     <ProjectGuid>{68B31BE1-E076-4117-88A5-5FB1EB7D0E90}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>quote</RootNamespace>
+    <RootNamespace>OnionRouting</RootNamespace>
     <AssemblyName>quote</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

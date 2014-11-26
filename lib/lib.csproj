@@ -7,7 +7,7 @@
     <ProjectGuid>{5AD9014E-0C2A-4291-8924-789998CCA0F9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>lib</RootNamespace>
+    <RootNamespace>OnionRouting</RootNamespace>
     <AssemblyName>lib</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

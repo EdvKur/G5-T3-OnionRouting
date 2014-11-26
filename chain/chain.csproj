@@ -7,7 +7,7 @@
     <ProjectGuid>{768D99E4-42E4-4AE7-9827-C59646A7CBC3}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>chain</RootNamespace>
+    <RootNamespace>OnionRouting</RootNamespace>
     <AssemblyName>chain</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
