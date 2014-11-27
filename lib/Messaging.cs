@@ -11,11 +11,14 @@ namespace OnionRouting
 {
     public class Messaging
     {
-        public static HttpListener createListener(int port, params string[] prefixes)
+        public static HttpListener createListener(int port, bool localhostPrefixOnly = false, params string[] prefixes)
         {
             HttpListener listener = new HttpListener();
             foreach (var prefix in prefixes)
-                listener.Prefixes.Add("http://localhost:" + port + "/" + prefix + "/");
+                if (localhostPrefixOnly)
+                    listener.Prefixes.Add("http://localhost:" + port + "/" + prefix + "/");
+                else
+                    listener.Prefixes.Add("http://*:" + port + "/" + prefix + "/");
 
             listener.Start();
             return listener;
@@ -97,7 +100,7 @@ namespace OnionRouting
             }
         }
 
-        public static byte[] buildRequest(String url, List<ChainNodeData> chain)
+        public static byte[] buildRequest(String url, List<ChainNodeInfo> chain)
         {
             byte[] data = null;
 
@@ -140,12 +143,8 @@ namespace OnionRouting
                 }
             }
         }
-
-
-
-
-
-        public static byte[] buildRequest(String url, List<ChainNodeData> chain, RSAParameters originPublicKey)
+        
+        public static byte[] buildRequest(String url, List<ChainNodeInfo> chain, RSAParameters originPublicKey)
         {
             byte[] data = null;
 
@@ -192,8 +191,5 @@ namespace OnionRouting
                 }
             }
         }
-
-
-
     }
 }

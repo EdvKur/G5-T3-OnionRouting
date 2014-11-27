@@ -12,18 +12,17 @@ namespace OnionRouting
 {
     class OriginatorService
     {
-        static int _port;
-        static string _directoryServiceUrl;
-        static string _quoteServiceUrl;
+        const int PORT = 8000;
+        const string DIRECTORY_SERVICE_URL = "http://54.93.191.79:8000/chain";
+        const string QUOTE_SERVICE_URL = "http://54.93.192.53:8000/quote";
+       
         static RSAKeyPair _rsaKeys;
                 
         static void Main(string[] args)
-        {           
-            parseArgs(args);
+        {
+            new Thread(handleRequests).Start();      
+            Log.info("originator up and running (port {0})", PORT);
                         
-            Log.info("originator up and running (port {0})", _port);
-            new Thread(handleRequests).Start();
-            
             while (true)
             {
                 Console.WriteLine();
@@ -50,7 +49,7 @@ namespace OnionRouting
 
                 else
                 {
-                    byte[] requestData = Messaging.buildRequest(_quoteServiceUrl, chain, _rsaKeys.PublicKey);
+                    byte[] requestData = Messaging.buildRequest(QUOTE_SERVICE_URL, chain, _rsaKeys.PublicKey);
                     byte[] responseData = Messaging.sendRecv(chain[0].Url, requestData, 1500, out success);
 
                     if (success)
@@ -77,7 +76,7 @@ namespace OnionRouting
             return null;
         }
 
-        private static string prepareMetaInfos(string quote, List<ChainNodeData> chain)
+        private static string prepareMetaInfos(string quote, List<ChainNodeInfo> chain)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(quote);
@@ -94,7 +93,7 @@ namespace OnionRouting
         
         private static void handleRequests()
         {
-            HttpListener listener = Messaging.createListener(_port, "handle", "ui");
+            HttpListener listener = Messaging.createListener(PORT, true, "handle", "ui");
             while (true)
             {
                 var context = listener.GetContext();                
@@ -129,23 +128,12 @@ namespace OnionRouting
                 response.OutputStream.Write(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
             }
-        }
+        }            
 
-        private static void parseArgs(string[] args)
-        {
-            _port = 7000;
-            _directoryServiceUrl = "http://localhost:8000/chain";
-            _quoteServiceUrl     = "http://localhost:11000/quote";
-            
-            // TODO
-            // Environment.Exit(1);
-        }
-              
-
-        static List<ChainNodeData> requestChain()
+        static List<ChainNodeInfo> requestChain()
         {
             bool success;
-            byte[] responceData = Messaging.sendRecv(_directoryServiceUrl, out success);
+            byte[] responceData = Messaging.sendRecv(DIRECTORY_SERVICE_URL, out success);
 
             if (!success) return null;
 
@@ -158,12 +146,15 @@ namespace OnionRouting
                 return null;
             }
 
-            List<ChainNodeData> chain = new List<ChainNodeData>();
+            List<ChainNodeInfo> chain = new List<ChainNodeInfo>();
 
             for (int i = 0; i < lines.Length; i += 2)
             {
                 // TODO error handling (e.g. check if responce is valid)
-                chain.Add(new ChainNodeData(lines[i], Crypto.importKey(lines[i + 1])));
+                chain.Add(new ChainNodeInfo() {
+                        Url = lines[i],
+                        PublicKey = Crypto.importKey(lines[i + 1])
+                    });
             }
 
             return chain;

@@ -12,23 +12,27 @@ namespace OnionRouting
 {
     class DirectoryService
     {
-        static int _port = 8000;
-        static int _chainLength = 3;
-        static int _targetChainNodeCount = 6;
-        static int _aliveCheckInterval   = 5000;
-        static int _aliveCheckTimeout    = 1000;
+        const int PORT = 8000;
+        const int CHAIN_LENGTH = 3;
+        const int TARGET_CHAIN_NODE_COUNT = 6;
+        const int ALIVE_CHECK_INTERVAL = 5000;
+        const int ALIVE_CHECK_TIMEOUT = 4000;
 
-        static List<ChainNodeData> _chainNodes = new List<ChainNodeData>();      // <IP:Port, PublicKey in Base64>
+        static List<ChainNodeInfo> _runningChainNodes = new List<ChainNodeInfo>();
+        static List<ChainNodeInfo> _startingChainNodes = new List<ChainNodeInfo>();
+        
         static Random _rng = new Random();
 
         static void Main(string[] args)
         {
+            AWSHelper.init();
+
             discoverChainNodes();
 
-            new Thread(aliveCheck).Start();
-            HttpListener listener = Messaging.createListener(_port, "chain");
+            new Thread(checkRunningChainNodeStatus).Start();
+            HttpListener listener = Messaging.createListener(PORT, false, "chain");
 
-            Log.info("directory node up and running (port {0})", _port);
+            Log.info("directory node up and running (port {0})", PORT);
             
             while (true)
             {
@@ -60,74 +64,144 @@ namespace OnionRouting
             }
         }
 
-        static void discoverChainNodes()
-        {
-            Log.info("discovering chain nodes");
+        //static void discoverChainNodes()
+        //{
+        //    Log.info("discovering chain nodes");
 
-            for (int i = 9000; i < 9006; i++)
-            {
-                bool success;
-                string url = "http://localhost:" + i;
+        //    for (int i = 9000; i < 9006; i++)
+        //    {
+        //        bool success;
+        //        string url = "http://localhost:" + i;
 
-                byte[] response = Messaging.sendRecv(url + "/key", out success);
+        //        byte[] response = Messaging.sendRecv(url + "/key", out success);
 
-                if (success)
-                {
-                    string xml = Encoding.UTF8.GetString(response);
-                    _chainNodes.Add(new ChainNodeData(url, xml));
+        //        if (success)
+        //        {
+        //            string xml = Encoding.UTF8.GetString(response);
+        //            _runningChainNodes.Add(new ChainNodeData(url, xml));
 
-                    Log.info("chain node at " + url.Substring(7) + " discovered");
-                }
-                else
-                    Log.error("chain node at " + url.Substring(7) + " unavailable");
-            }
-        }
+        //            Log.info("chain node at " + url.Substring(7) + " discovered");
+        //        }
+        //        else
+        //            Log.error("chain node at " + url.Substring(7) + " unavailable");
+        //    }
+        //}
         
-        static IEnumerable<ChainNodeData> getRandomChain()
+        static IEnumerable<ChainNodeInfo> getRandomChain()
         {
-            //return _chainNodes; // TODO remove this line
-
-            lock (_chainNodes)
+            lock (_runningChainNodes)
             {
-                if (_chainNodes.Count < _chainLength)
+                if (_runningChainNodes.Count < CHAIN_LENGTH)
                     return null;
 
-                return _chainNodes.OrderBy(x => _rng.Next()).Take(_chainLength);
+                return _runningChainNodes.OrderBy(x => _rng.Next()).Take(CHAIN_LENGTH);
             }
         }
 
+        static void discoverChainNodes()
+        {
+            Log.info("discovering running chain nodes");
 
-        static void aliveCheck()
+            _startingChainNodes.AddRange(AWSHelper.discoverChainNodes());
+
+            for (int i = _startingChainNodes.Count; i < TARGET_CHAIN_NODE_COUNT; i++)
+            {
+                Log.info("launching new chain node");
+                _startingChainNodes.Add(AWSHelper.launchNewChainNodeInstance());
+            }
+
+            new Thread(waitForNewChainNodes).Start();
+        }
+        
+        static void checkRunningChainNodeStatus()
         {
             while (true)
             {
-                Task<WebResponse>[] tasks = new Task<WebResponse>[_chainNodes.Count];
-                
-                for (int i = 0; i < _chainNodes.Count; i++)
-                    tasks[i] = HttpWebRequest.CreateHttp(_chainNodes[i].Url + "/status").GetResponseAsync();
-                
-                Thread.Sleep(_aliveCheckTimeout);
+                Task<WebResponse>[] tasks = new Task<WebResponse>[_runningChainNodes.Count];
+
+                for (int i = 0; i < _runningChainNodes.Count; i++)
+                {
+                    tasks[i] = HttpWebRequest.CreateHttp(_runningChainNodes[i].Url + "/status").GetResponseAsync();
+                }
+                                
+                Thread.Sleep(ALIVE_CHECK_TIMEOUT);
                 
                 int j = 0;
                 for (int i = 0; i < tasks.Length; i++)
                 {
-                    if (!tasks[i].IsCompleted)
+                    if (tasks[i].IsCompleted)
                     {
-                        Log.info("chain node at {0} gone offline!", _chainNodes[j].Url.Substring(7));
-                        lock (_chainNodes)
+                        tasks[i].Result.Close();
+                        tasks[i].Dispose();
+                    }
+                    else
+                    {
+                        Log.info("chain node at {0} gone offline!", _runningChainNodes[j].Url.Substring(7));
+                        lock (_runningChainNodes)
                         {
-                            _chainNodes.RemoveAt(j);
+                            _runningChainNodes.RemoveAt(j);
                             j--;
                         }
                     }
+
                     j++;
                 }
 
                 Log.info("status of all chain nodes checked");
-                Thread.Sleep(_aliveCheckInterval - _aliveCheckTimeout);
+                Thread.Sleep(ALIVE_CHECK_INTERVAL - ALIVE_CHECK_TIMEOUT);
+
+
+                // start new chain node instances if there are not 6 available/starting
+                lock (_runningChainNodes)
+                    lock (_startingChainNodes)
+                        try
+                        {
+                            while (_runningChainNodes.Count + _startingChainNodes.Count < TARGET_CHAIN_NODE_COUNT)
+                            {
+                                Log.info("started new chain node instance");
+                                _startingChainNodes.Add(AWSHelper.launchNewChainNodeInstance());
+                            }
+                        }
+                        catch {
+                            Log.error("failed to start new chain node instance (AWS instance limit)");
+                        }
             }
         }
+                            
+        static void waitForNewChainNodes()
+        {
+            while (true)
+            {
+                ChainNodeInfo[] startingChainNodes;
+                lock (_startingChainNodes)
+                    startingChainNodes = _startingChainNodes.ToArray();
 
-       
+                for (int i = 0; i < startingChainNodes.Length; i++)
+                {
+                    if (AWSHelper.checkChainNodeState(startingChainNodes[i]) == "running")
+                    {
+                        string url = "http://" + startingChainNodes[i].IP + ":" + PORT;
+                        startingChainNodes[i].Url = url;
+                        bool success;
+                        byte[] response = Messaging.sendRecv(startingChainNodes[i].Url + "/key", out success);
+                        if (success)
+                        {
+                            string xml = Encoding.UTF8.GetString(response);
+                            startingChainNodes[i].PublicKeyXml = xml;
+
+                            lock (_startingChainNodes)
+                                _startingChainNodes.Remove(startingChainNodes[i]);
+
+                            lock (_runningChainNodes)
+                                _runningChainNodes.Add(startingChainNodes[i]);
+
+                            Log.info("chain node at " + startingChainNodes[i].IP + " up and running");
+                        }
+                    }
+                }
+
+                Thread.Sleep(ALIVE_CHECK_INTERVAL);
+            }
+        }
     }
 }

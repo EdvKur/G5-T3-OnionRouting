@@ -9,15 +9,16 @@ using System.Threading.Tasks;
 namespace OnionRouting
 {
     class QuoteService
-    {        
+    {
+        const int PORT = 8000;
+
         static string[] _quotes = File.ReadAllLines("quotes.txt");
-        static Random  _rng = new Random();
-        static int     _port = 11000;
-        
+        static Random   _rng    = new Random();
+                
         static void Main(string[] args)
         {
-            HttpListener listener = Messaging.createListener(_port, "quote");            
-            Log.info("quote service up and running (port {0})", _port);
+            HttpListener listener = Messaging.createListener(PORT, false, "quote");            
+            Log.info("quote service up and running (port {0})", PORT);
            
             while (true)
             {

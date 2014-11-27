@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChainNodeData.cs" />
+    <Compile Include="ChainNodeInfo.cs" />
     <Compile Include="Crypto.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Messaging.cs" />

@@ -12,36 +12,24 @@ namespace OnionRouting
 {
     class ChainService
     {
-        static int _port = 9000;
+        const int PORT = 8000;
+
         static RSAKeyPair _rsaKeys;
 
         static void Main(string[] args)
         {
-            parseArgs(args);
-
             Log.info("generating public/private key");
             _rsaKeys = Crypto.generateKey();
 
-            HttpListener listener = Messaging.createListener(_port, "status", "key", "route");
-            Log.info("chain node up and running (port {0})", _port);
+            HttpListener listener = Messaging.createListener(PORT, false, "status", "key", "route");
+            Log.info("chain node up and running (port {0})", PORT);
 
             while (true)
             {
                 new Thread(handleRequest).Start(listener.GetContext());
             }
         }
-
-        private static void parseArgs(string[] args)
-        {
-            if (args.Length == 0 || !int.TryParse(args[0], out _port) || _port <= 0 || _port > 65535)
-            {
-                Console.WriteLine("Error: valid port required!");
-                Console.WriteLine("Usage: chain port");
-                Environment.Exit(1);
-            }
-        }
-              
-
+        
         static void handleRequest(Object obj)
         {
             HttpListenerContext context = (HttpListenerContext)obj;
@@ -103,5 +91,15 @@ namespace OnionRouting
                 response.OutputStream.Close();
             }
         }
+
+        //private static void parseArgs(string[] args)
+        //{
+        //    if (args.Length == 0 || !int.TryParse(args[0], out PORT) || PORT <= 0 || PORT > 65535)
+        //    {
+        //        Console.WriteLine("Error: valid port required!");
+        //        Console.WriteLine("Usage: chain port");
+        //        Environment.Exit(1);
+        //    }
+        //}              
     }
 }

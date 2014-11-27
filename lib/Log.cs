@@ -12,8 +12,8 @@ namespace OnionRouting
     
         static Log()
         {
-            Console.WindowWidth = 140;
-            Console.WindowHeight = 50;
+            Console.WindowWidth = 140 < Console.LargestWindowWidth ? 140 : Console.LargestWindowWidth;
+            Console.WindowHeight = 50 < Console.LargestWindowHeight ? 50 : Console.LargestWindowHeight;
 
             Console.ForegroundColor = ConsoleColor.Gray;
         }
