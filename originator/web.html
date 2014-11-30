@@ -44,16 +44,6 @@
 		.form-signin .form-control:focus {
 		  z-index: 2;
 		}
-		.form-signin input[type="email"] {
-		  margin-bottom: -1px;
-		  border-bottom-right-radius: 0;
-		  border-bottom-left-radius: 0;
-		}
-		.form-signin input[type="password"] {
-		  margin-bottom: 10px;
-		  border-top-left-radius: 0;
-		  border-top-right-radius: 0;
-		}
 		
 		#response0{
 			display:block;
@@ -90,6 +80,19 @@
 			font-weight: bold;
 		}
 		
+		.center {
+			text-align: center;
+		}
+		
+		.nodeText {
+			font-size: 20px;
+			margin-left: -35px;
+		}
+		
+		h2 {
+			text-align:center;
+		}
+        		
 	  </style>
 
     <!-- Custom styles for this template -->
@@ -107,14 +110,33 @@
         <input type="button" id="btnSendRequest" class="btn btn-lg btn-primary btn-block" data-loading-text="Loading..."  onclick="sendRequest();" value="Bitte um Zitat" ></input>
 		<br /><br />
       </form>
-	  <div class="row hiddenElem" id="results" style="background-color:white;border-radius:5px;">
-	  	<h2 id="response0">asdf</h2>
+	  <div class="row hiddenElem" id="results" style="background-color:white;border-radius:5px;" >
+		<div class="col-md-12 center" >
+			<h2 id="response0">asdf</h2><br /><br />
+		</div>
+		<div class="col-md-4 center" >
+			<img src="http://c84.imgup.net/pcbaa2.png" alt="Entry Node"></img><br/><br/>
+			<span class="nodeText">Entry Node</span> <br />
+			<span id="request1" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request4" class="encryptedMessage hiddenElem"></span>
+		</div>
+		<div class="col-md-4 center" >
+			<img src="http://c84.imgup.net/pcbaa2.png" alt="Intermediary Node"></img><br /><br/>
+			<span class="nodeText">Intermediary Node</span> <br />
+			<span id="request2" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request5" class="encryptedMessage hiddenElem"></span>
+		</div>
+		<div class="col-md-4 center" >
+			<img src="http://c84.imgup.net/pcbaa2.png" alt="Exit Node"></img><br /><br/>
+			<span class="nodeText">Exit Node</span><br />
+			<span id="request3" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request6" class="encryptedMessage hiddenElem"></span>
+		</div>
+	  </div>
+	  <div class="row hiddenElem" id="results" >
 		<div class="col-md-6">
 			<ol class="chain_ips">
 				<h3>Hinweg</h3>
-				<li><span id="request1" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request4" class="encryptedMessage hiddenElem"></span></li>
-				<li><span id="request2" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request5" class="encryptedMessage hiddenElem"></span></li>
-				<li><span id="request3" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request6" class="encryptedMessage hiddenElem"></span></li>
+				<li></li>
+				<li></li>
+				<li></li>
 			</ol>
 			<p id="request7"></p>
 			<p id="request8"></p>
@@ -172,7 +194,9 @@
                 url: "http://localhost:8000/handle",
             })
         .success(function (ret) {
-			var res = ret.split("\r\n"); 
+			var res = ret.replace(/\</g,"&lt;");
+			res = res.replace(/\>/g,"&gt;")  
+			res = res.split("\r\n"); 
 			$j("#results").show();
 			$j("#response0").show();
 			$j("#response0").html(res[0]);
@@ -182,7 +206,7 @@
 			$j("#btnSendRequest").button('reset');
 			})
 		.error(function(ret){
-				alert("Der Originator-Dienst steht leider nicht zur Verfügung.");
+				alert("Der Directory-Dienst steht leider nicht zur Verfügung.");
 			});
 			$j("#btnSendRequest").button('loading');
 		}

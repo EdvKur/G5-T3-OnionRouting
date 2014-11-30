@@ -47,7 +47,6 @@
   <ItemGroup>
     <Compile Include="AWSHelper.cs" />
     <Compile Include="DirectoryService.cs" />
-    <Compile Include="Instancer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

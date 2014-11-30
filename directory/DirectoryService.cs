@@ -158,8 +158,8 @@ namespace OnionRouting
                         {
                             while (_runningChainNodes.Count + _startingChainNodes.Count < TARGET_CHAIN_NODE_COUNT)
                             {
-                                Log.info("started new chain node instance");
                                 _startingChainNodes.Add(AWSHelper.launchNewChainNodeInstance());
+                                Log.info("started new chain node instance");
                             }
                         }
                         catch {

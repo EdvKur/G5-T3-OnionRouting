@@ -106,7 +106,7 @@ namespace OnionRouting
                 if (context.Request.Url.AbsolutePath == "/ui")
                 {
                     buffer = File.ReadAllBytes("web.html");
-                    response.ContentType = "application/xhtml+xml";
+                    response.ContentType = "text/html";
                 }
 
                 else if (context.Request.Url.AbsolutePath == "/handle")
