@@ -11,6 +11,11 @@ namespace OnionRouting
 {
     public class Messaging
     {
+		public const int HTTP_OK = 200;
+		public const int HTTP_METHOD_NOT_ALLOWED = 405;
+		public const int HTTP_SERVER_ERROR = 500;
+		public const int HTTP_SERVICE_UNAVAILABLE = 503;
+
         public static HttpListener createListener(int port, bool localhostPrefixOnly = false, params string[] prefixes)
         {
             HttpListener listener = new HttpListener();
@@ -18,7 +23,7 @@ namespace OnionRouting
                 if (localhostPrefixOnly)
                     listener.Prefixes.Add("http://localhost:" + port + "/" + prefix + "/");
                 else
-                    listener.Prefixes.Add("http://*:" + port + "/" + prefix + "/");
+                    listener.Prefixes.Add("http://+:" + port + "/" + prefix + "/");
 
             listener.Start();
             return listener;

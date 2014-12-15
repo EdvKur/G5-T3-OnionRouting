@@ -39,6 +39,13 @@ namespace OnionRouting
                 HttpListenerContext context = listener.GetContext();
                 HttpListenerResponse response = context.Response;
 
+				if (context.Request.HttpMethod != "GET")
+				{
+					response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
+					response.Close();
+					return;
+				}
+
                 Log.info("handing incoming chain request from {0}", context.Request.RemoteEndPoint);
 
                 StringBuilder responseData = new StringBuilder();
@@ -46,7 +53,7 @@ namespace OnionRouting
                 var chain = getRandomChain();
                 if (chain == null)
                 {
-                    response.StatusCode = 503;      // service unavailable
+					response.StatusCode = Messaging.HTTP_SERVICE_UNAVAILABLE;
                     responseData.AppendLine("Not enough chain nodes available!");
                 }
                 else
@@ -60,7 +67,7 @@ namespace OnionRouting
 
                 response.ContentLength64 = buffer.Length;
                 response.OutputStream.Write(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
+                response.Close();
             }
         }
 

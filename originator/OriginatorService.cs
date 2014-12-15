@@ -96,7 +96,7 @@ namespace OnionRouting
             HttpListener listener = Messaging.createListener(PORT, true, "handle", "ui");
             while (true)
             {
-                var context = listener.GetContext();                
+                var context = listener.GetContext();
                 
                 HttpListenerRequest request = context.Request;
                 HttpListenerResponse response = context.Response;
@@ -115,7 +115,7 @@ namespace OnionRouting
                     string metaInfos = requestQuote(out success, true);
 
                     if (success)
-                        buffer = Encoding.UTF8.GetBytes(metaInfos);           
+                        buffer = Encoding.UTF8.GetBytes(metaInfos);
 
                     else
                     {

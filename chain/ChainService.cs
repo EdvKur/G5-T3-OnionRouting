@@ -14,7 +14,7 @@ namespace OnionRouting
     {
         const int PORT = 8000;
 
-        static RSAKeyPair _rsaKeys;
+		private static RSAKeyPair _rsaKeys;
 
         static void Main(string[] args)
         {
@@ -33,64 +33,113 @@ namespace OnionRouting
         static void handleRequest(Object obj)
         {
             HttpListenerContext context = (HttpListenerContext)obj;
-            HttpListenerRequest request = context.Request;
-            HttpListenerResponse response = context.Response;
-
-            byte[] buffer = null;
-            bool success = true;
 
             if (context.Request.Url.AbsolutePath == "/status")
             {
-                Log.info("handling incoming status request from {0}", context.Request.RemoteEndPoint);
-                buffer = Encoding.UTF8.GetBytes("online");
+				handleStatusRequest(context);
             }
-
             else if (context.Request.Url.AbsolutePath == "/key")
             {
-                Log.info("handling incoming key request from {0}", context.Request.RemoteEndPoint);
-                buffer = Encoding.UTF8.GetBytes(_rsaKeys.PublicKeyXML);
+				handleKeyRequest(context);
             }
-
-            else // route request
+            else
             {
-                try {
-                    using (BinaryReader br = new BinaryReader(request.InputStream))
-                    {
-                        byte[] encryptedMessage = br.ReadBytes((int)request.ContentLength64);
-                        string nextHopUrl;
-                        byte[] messageForNextHop;
-                        RSAParameters originPublicKey;
-                        Messaging.unpackRequest(encryptedMessage, _rsaKeys.PrivateKey, out nextHopUrl, out originPublicKey, out messageForNextHop);
-
-                        string nextHopEP = nextHopUrl.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)[1];
-                        Log.info("routing request from {0} to {1}", context.Request.RemoteEndPoint, nextHopEP);
-
-                        if (messageForNextHop.Length == 0)
-                            buffer = Messaging.sendRecv(nextHopUrl, out success);
-                        else
-                            buffer = Messaging.sendRecv(nextHopUrl, messageForNextHop, out success);
-
-                        Log.info("routing response from {0} to {1}", nextHopEP, context.Request.RemoteEndPoint);
-
-                        buffer = Crypto.encrypt(buffer, originPublicKey);
-                    }
-                }
-                catch
-                {
-                    success = false;
-                }
-
-                if (!success)
-                    Log.error("error while handling route request");
-            }
-
-            if (success)
-            {
-                response.ContentLength64 = buffer.Length;
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
+				handleRouteRequest(context);
             }
         }
+
+		private static void handleStatusRequest(HttpListenerContext context)
+		{
+			Log.info("handling incoming status request from {0}", context.Request.RemoteEndPoint);
+			HttpListenerRequest request = context.Request;
+			HttpListenerResponse response = context.Response;
+
+			if (request.HttpMethod != "GET")
+			{
+				response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
+				response.Close();
+				return;
+			}
+			response.StatusCode = Messaging.HTTP_OK;
+
+			StreamWriter writer = new StreamWriter(response.OutputStream);
+			writer.Write("online");
+			writer.Close();
+			response.Close();
+		}
+
+		private static void handleKeyRequest(HttpListenerContext context)
+		{
+			Log.info("handling incoming key request from {0}", context.Request.RemoteEndPoint);
+			HttpListenerRequest request = context.Request;
+			HttpListenerResponse response = context.Response;
+
+			if (request.HttpMethod != "GET")
+			{
+				response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
+				response.Close();
+				return;
+			}
+			response.StatusCode = Messaging.HTTP_OK;
+
+			StreamWriter writer = new StreamWriter(response.OutputStream);
+			writer.Write(_rsaKeys.PublicKeyXML);
+			writer.Close();
+			response.Close();
+		}
+
+		private static void handleRouteRequest(HttpListenerContext context)
+		{
+			HttpListenerRequest request = context.Request;
+			HttpListenerResponse response = context.Response;
+
+			if (request.HttpMethod != "POST")
+			{
+				response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
+				response.Close();
+				return;
+			}
+
+			byte[] buffer = null;
+
+			try {
+				using (BinaryReader br = new BinaryReader(request.InputStream))
+				{
+					byte[] encryptedMessage = br.ReadBytes((int)request.ContentLength64);
+					string nextHopUrl;
+					byte[] messageForNextHop;
+					bool success = true;
+					RSAParameters originPublicKey;
+					Messaging.unpackRequest(encryptedMessage, _rsaKeys.PrivateKey, out nextHopUrl, out originPublicKey, out messageForNextHop);
+
+					string nextHopEP = nextHopUrl.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)[1];
+					Log.info("routing request from {0} to {1}", context.Request.RemoteEndPoint, nextHopEP);
+
+					if (messageForNextHop.Length == 0)
+						buffer = Messaging.sendRecv(nextHopUrl, out success);
+					else
+						buffer = Messaging.sendRecv(nextHopUrl, messageForNextHop, out success);
+
+					if (!success) throw new Exception();
+
+					Log.info("routing response from {0} to {1}", nextHopEP, context.Request.RemoteEndPoint);
+
+					buffer = Crypto.encrypt(buffer, originPublicKey);
+
+					response.ContentLength64 = buffer.Length;
+					response.OutputStream.Write(buffer, 0, buffer.Length);
+					response.StatusCode = Messaging.HTTP_OK;
+				}
+			}
+			catch
+			{
+				Log.error("error while handling route request");
+				response.StatusCode = Messaging.HTTP_SERVER_ERROR;
+			}
+			finally {
+				response.Close();
+			}
+		}
 
         //private static void parseArgs(string[] args)
         //{
