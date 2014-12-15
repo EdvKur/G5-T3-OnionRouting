@@ -25,8 +25,6 @@ namespace OnionRouting
 
         static void Main(string[] args)
         {
-            AWSHelper.init();
-
             discoverChainNodes();
 
             new Thread(checkRunningChainNodeStatus).Start();
@@ -108,13 +106,13 @@ namespace OnionRouting
         static void discoverChainNodes()
         {
             Log.info("discovering running chain nodes");
-
-            _startingChainNodes.AddRange(AWSHelper.discoverChainNodes());
+			AWSHelper awsHelper = AWSHelper.instance();
+			_startingChainNodes.AddRange(awsHelper.discoverChainNodes());
 
             for (int i = _startingChainNodes.Count; i < TARGET_CHAIN_NODE_COUNT; i++)
             {
                 Log.info("launching new chain node");
-                _startingChainNodes.Add(AWSHelper.launchNewChainNodeInstance());
+				_startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
             }
 
             new Thread(waitForNewChainNodes).Start();
@@ -122,6 +120,8 @@ namespace OnionRouting
         
         static void checkRunningChainNodeStatus()
         {
+			AWSHelper awsHelper = AWSHelper.instance();
+
             while (true)
             {
                 Task<WebResponse>[] tasks = new Task<WebResponse>[_runningChainNodes.Count];
@@ -165,7 +165,7 @@ namespace OnionRouting
                         {
                             while (_runningChainNodes.Count + _startingChainNodes.Count < TARGET_CHAIN_NODE_COUNT)
                             {
-                                _startingChainNodes.Add(AWSHelper.launchNewChainNodeInstance());
+						_startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
                                 Log.info("started new chain node instance");
                             }
                         }
@@ -177,6 +177,7 @@ namespace OnionRouting
                             
         static void waitForNewChainNodes()
         {
+			AWSHelper awsHelper = AWSHelper.instance();
             while (true)
             {
                 ChainNodeInfo[] startingChainNodes;
@@ -185,7 +186,7 @@ namespace OnionRouting
 
                 for (int i = 0; i < startingChainNodes.Length; i++)
                 {
-                    if (AWSHelper.checkChainNodeState(startingChainNodes[i]) == "running")
+					if (awsHelper.checkChainNodeState(startingChainNodes[i]) == "running")
                     {
                         string url = "http://" + startingChainNodes[i].IP + ":" + PORT;
                         startingChainNodes[i].Url = url;

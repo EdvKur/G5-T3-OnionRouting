@@ -12,24 +12,38 @@ using Amazon;
 
 namespace OnionRouting
 {
-    static class AWSHelper
+    class AWSHelper
     {
         const string CREDENTIAL_LOCATION = "C:\\credentials\\credentials";
         const string CHAIN_NODE_IMAGE_ID = "ami-3005342d";
         const string CHAIN_NODE_TAG = "G5-T3-ChainNode";
         const string INSTANCE_TYPE = "t2.micro";
         const string KEY_PAIR_NAME = "G5-T3-Keypair";
-        const string SECURITY_GROUP = "sg-68ff1601"; 
+        const string SECURITY_GROUP = "sg-68ff1601";
 
-        private static AmazonEC2Client client;
+		private static AWSHelper singletonInstance = null;
+		private static Object creationMutex = new Object();
+
+		public static AWSHelper instance()
+		{
+			lock (creationMutex)
+			{
+				if (singletonInstance == null)
+					singletonInstance = new AWSHelper();
+			}
+
+			return singletonInstance;
+		}
+
+		private AmazonEC2Client client;
         
-        public static void init()
+		private AWSHelper()
         {
             StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials("Administrator", CREDENTIAL_LOCATION);
             client = new AmazonEC2Client(credentials, Amazon.RegionEndpoint.EUCentral1);
         }
         
-        public static List<ChainNodeInfo> discoverChainNodes()
+        public List<ChainNodeInfo> discoverChainNodes()
         {
             List<ChainNodeInfo> runningChainNodes = new List<ChainNodeInfo>();
 
@@ -54,7 +68,7 @@ namespace OnionRouting
             return runningChainNodes;
         }
 
-        public static string checkChainNodeState(ChainNodeInfo chainNode)
+        public string checkChainNodeState(ChainNodeInfo chainNode)
         {
             var request = new DescribeInstancesRequest();
             request.InstanceIds = new List<string> { chainNode.InstanceId };
@@ -70,7 +84,7 @@ namespace OnionRouting
             return instance.State.Name;
         }
 
-        public static ChainNodeInfo launchNewChainNodeInstance()
+        public ChainNodeInfo launchNewChainNodeInstance()
         {
 			RunInstancesRequest request = new RunInstancesRequest() {
 				ImageId = CHAIN_NODE_IMAGE_ID,
@@ -98,7 +112,7 @@ namespace OnionRouting
             );
         }
 
-        public static void terminatChainNodeInstance(ChainNodeInfo chainNode)
+        public void terminatChainNodeInstance(ChainNodeInfo chainNode)
 		{
 			var stopRequest = new TerminateInstancesRequest() {
 				InstanceIds = new List<string>() { chainNode.InstanceId }
