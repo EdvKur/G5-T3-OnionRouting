@@ -20,7 +20,7 @@ namespace OnionRouting
                 
         static void Main(string[] args)
         {
-            new Thread(handleRequests).Start();      
+            new Thread(handleRequests).Start();
             Log.info("originator up and running (port {0})", PORT);
                         
             while (true)

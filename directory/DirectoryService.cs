@@ -43,7 +43,7 @@ namespace OnionRouting
 				{
 					response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
 					response.Close();
-					return;
+					continue;
 				}
 
                 Log.info("handing incoming chain request from {0}", context.Request.RemoteEndPoint);
