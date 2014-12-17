@@ -15,6 +15,7 @@ namespace OnionRouting
         {
 			ChainNodeManager chainNodeManager = new ChainNodeManager();
 			chainNodeManager.AutoStartChainNodes = true;
+			chainNodeManager.discoverChainNodes();
 			chainNodeManager.start();
 
             HttpListener listener = Messaging.createListener(PORT, false, "chain");
