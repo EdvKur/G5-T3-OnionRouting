@@ -15,6 +15,7 @@ namespace OnionRouting
     class AWSHelper
     {
         const string CREDENTIAL_LOCATION = "C:\\credentials\\credentials";
+//		const string CREDENTIAL_LOCATION = "/home/sunflare/.aws/credentials";
         const string CHAIN_NODE_IMAGE_ID = "ami-3005342d";
         const string CHAIN_NODE_TAG = "G5-T3-ChainNode";
         const string INSTANCE_TYPE = "t2.micro";
@@ -39,7 +40,7 @@ namespace OnionRouting
         
 		private AWSHelper()
         {
-            StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials("Administrator", CREDENTIAL_LOCATION);
+			StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials("default", CREDENTIAL_LOCATION);
             client = new AmazonEC2Client(credentials, Amazon.RegionEndpoint.EUCentral1);
         }
         

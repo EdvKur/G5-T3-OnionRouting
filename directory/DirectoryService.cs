@@ -7,58 +7,78 @@ using System.Text;
 
 namespace OnionRouting
 {
-    class DirectoryService
+	class DirectoryService : OnionService
     {
-        const int PORT = 8000;
+		const int DEFAULT_PORT = 8000;
 
-        static void Main(string[] args)
-        {
-			ChainNodeManager chainNodeManager = new ChainNodeManager();
+		private ChainNodeManager chainNodeManager = null;
+
+		public DirectoryService(int port = DEFAULT_PORT)
+			: base(port)
+		{
+		}
+
+		protected override HttpListener createListener()
+		{
+			return Messaging.createListener(port, false, "chain");
+		}
+
+		protected override void onStart()
+		{
+			chainNodeManager = new ChainNodeManager();
 			chainNodeManager.AutoStartChainNodes = true;
 			chainNodeManager.discoverChainNodes();
 			chainNodeManager.start();
 
-            HttpListener listener = Messaging.createListener(PORT, false, "chain");
+			Log.info("chain node up and running (port {0})", port);
+		}
 
-            Log.info("directory node up and running (port {0})", PORT);
-            
-            while (true)
-            {
-                HttpListenerContext context = listener.GetContext();
-                HttpListenerResponse response = context.Response;
+		protected override void onRequest(HttpListenerContext context)
+		{
+			HttpListenerResponse response = context.Response;
 
-				if (context.Request.HttpMethod != "GET")
+			if (context.Request.HttpMethod != "GET")
+			{
+				response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
+				response.Close();
+				return;
+			}
+
+			Log.info("handing incoming chain request from {0}", context.Request.RemoteEndPoint);
+
+			StringBuilder responseData = new StringBuilder();
+
+			var chain = chainNodeManager.getRandomChain();
+			if (chain == null)
+			{
+				response.StatusCode = Messaging.HTTP_SERVICE_UNAVAILABLE;
+				responseData.AppendLine("Not enough chain nodes available!");
+			}
+			else
+				foreach (var chainNode in chain)
 				{
-					response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
-					response.Close();
-					continue;
+					responseData.AppendLine(chainNode.Url + "/route");
+					responseData.AppendLine(chainNode.PublicKeyXml);
 				}
 
-                Log.info("handing incoming chain request from {0}", context.Request.RemoteEndPoint);
+			byte[] buffer = Encoding.UTF8.GetBytes(responseData.ToString());
 
-                StringBuilder responseData = new StringBuilder();
+			response.ContentLength64 = buffer.Length;
+			response.OutputStream.Write(buffer, 0, buffer.Length);
+			response.Close();
+		}
 
-				var chain = chainNodeManager.getRandomChain();
-                if (chain == null)
-                {
-					response.StatusCode = Messaging.HTTP_SERVICE_UNAVAILABLE;
-                    responseData.AppendLine("Not enough chain nodes available!");
-                }
-                else
-                    foreach (var chainNode in chain)
-                    {
-                        responseData.AppendLine(chainNode.Url + "/route");
-                        responseData.AppendLine(chainNode.PublicKeyXml);
-                    }
+		protected override void onStop()
+		{
+			chainNodeManager.stop();
+			chainNodeManager = null;
+		}
 
-                byte[] buffer = Encoding.UTF8.GetBytes(responseData.ToString());
-
-                response.ContentLength64 = buffer.Length;
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-                response.Close();
-            }
-
-//			chainNodeManager.stop();
+        static void Main(string[] args)
+        {
+			DirectoryService directoryService = new DirectoryService();
+			directoryService.start();
+			directoryService.wait();
         }
 
         //static void discoverChainNodes()

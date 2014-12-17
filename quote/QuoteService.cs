@@ -8,45 +8,63 @@ using System.Threading.Tasks;
 
 namespace OnionRouting
 {
-    class QuoteService
+	class QuoteService : OnionService
     {
-        const int PORT = 8000;
+		const int DEFAULT_PORT = 8000;
 
-        static string[] _quotes = File.ReadAllLines("quotes.txt");
-        static Random   _rng    = new Random();
-                
-        static void Main(string[] args)
-        {
-            HttpListener listener = Messaging.createListener(PORT, false, "quote");
-            Log.info("quote service up and running (port {0})", PORT);
-           
-            while (true)
-            {
-                HttpListenerContext context = listener.GetContext();
-				HttpListenerRequest request = context.Request;
-                HttpListenerResponse response = context.Response;
+		private string[] _quotes;
+		private Random   _rng    = new Random();
 
-				if (request.HttpMethod != "GET") {
-					response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
-					response.Close();
-					continue;
-				}
+		public QuoteService(int port = DEFAULT_PORT, string[] quotes = null)
+			: base(port)
+		{
+			if (quotes == null)
+				quotes = File.ReadAllLines("quotes.txt");
+			_quotes = quotes;
+		}
 
-				response.StatusCode = Messaging.HTTP_OK;
+		protected override HttpListener createListener()
+		{
+			return Messaging.createListener(port, false, "quote");
+		}
 
-                string quote = getRandomQuote();
-                byte[] buffer = Encoding.UTF8.GetBytes(quote);
-                response.ContentLength64 = buffer.Length;
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
+		protected override void onStart()
+		{
+			Log.info("quote service up and running (port {0})", port);
+		}
 
-                Log.info("handling incoming quote request from {0}", context.Request.RemoteEndPoint);
-            }
-        }
+		protected override void onRequest(HttpListenerContext context)
+		{
+			HttpListenerRequest request = context.Request;
+			HttpListenerResponse response = context.Response;
 
-        static string getRandomQuote()
+			if (request.HttpMethod != "GET") {
+				response.StatusCode = Messaging.HTTP_METHOD_NOT_ALLOWED;
+				response.Close();
+				return;
+			}
+
+			response.StatusCode = Messaging.HTTP_OK;
+
+			string quote = getRandomQuote();
+			byte[] buffer = Encoding.UTF8.GetBytes(quote);
+			response.ContentLength64 = buffer.Length;
+			response.OutputStream.Write(buffer, 0, buffer.Length);
+			response.Close();
+
+			Log.info("handling incoming quote request from {0}", context.Request.RemoteEndPoint);
+		}
+
+		private string getRandomQuote()
         {
             return _quotes[_rng.Next(_quotes.Length)];
         }
+
+		static void Main(string[] args)
+		{
+			QuoteService quoteService = new QuoteService();
+			quoteService.start();
+			quoteService.wait();
+		}
     }
 }

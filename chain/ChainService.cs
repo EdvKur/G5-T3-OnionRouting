@@ -10,25 +10,39 @@ using System.Threading.Tasks;
 
 namespace OnionRouting
 {
-    class ChainService
+	class ChainService : OnionService
     {
-        const int PORT = 8000;
+		const int DEFAULT_PORT = 8000;
 
 		private static RSAKeyPair _rsaKeys;
 
+		public ChainService(int port = DEFAULT_PORT)
+			: base(port)
+		{
+			Log.info("generating public/private key");
+			_rsaKeys = Crypto.generateKey();
+		}
+
+		protected override HttpListener createListener()
+		{
+			return Messaging.createListener(port, false, "status", "key", "route");
+		}
+
+		protected override void onStart()
+		{
+			Log.info("chain node up and running (port {0})", port);
+		}
+
+		protected override void onRequest(HttpListenerContext context)
+		{
+			new ChainRequestHandler(_rsaKeys, context).start();
+		}
+
         static void Main(string[] args)
         {
-            Log.info("generating public/private key");
-            _rsaKeys = Crypto.generateKey();
-
-            HttpListener listener = Messaging.createListener(PORT, false, "status", "key", "route");
-            Log.info("chain node up and running (port {0})", PORT);
-
-            while (true)
-            {
-				//new Thread(handleRequest).Start(listener.GetContext());
-				new ChainRequestHandler(_rsaKeys, listener.GetContext()).start();
-            }
+			ChainService chainService = new ChainService();
+			chainService.start();
+			chainService.wait();
         }
 
         //private static void parseArgs(string[] args)
