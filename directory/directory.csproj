@@ -48,6 +48,7 @@
     <Compile Include="AWSHelper.cs" />
     <Compile Include="DirectoryService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ChainNodeManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
