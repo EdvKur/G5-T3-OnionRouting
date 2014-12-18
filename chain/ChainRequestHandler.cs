@@ -8,6 +8,8 @@ namespace OnionRouting
 {
 	public class ChainRequestHandler
 	{
+		private const string ONLINE = "online";
+
 		private RSAKeyPair rsaKeys;
 		private HttpListenerContext context;
 		private bool started = false;
@@ -50,9 +52,10 @@ namespace OnionRouting
 				return;
 			}
 			response.StatusCode = Messaging.HTTP_OK;
+			response.ContentLength64 = ONLINE.Length;
 
 			StreamWriter writer = new StreamWriter(response.OutputStream);
-			writer.Write("online");
+			writer.Write(ONLINE);
 			writer.Close();
 			response.Close();
 		}
@@ -70,6 +73,7 @@ namespace OnionRouting
 				return;
 			}
 			response.StatusCode = Messaging.HTTP_OK;
+			response.ContentLength64 = rsaKeys.PublicKeyXML.Length;
 
 			StreamWriter writer = new StreamWriter(response.OutputStream);
 			writer.Write(rsaKeys.PublicKeyXML);
@@ -116,13 +120,13 @@ namespace OnionRouting
 					buffer = Crypto.encrypt(buffer, originPublicKey);
 
 					response.ContentLength64 = buffer.Length;
-					response.OutputStream.Write(buffer, 0, buffer.Length);
 					response.StatusCode = Messaging.HTTP_OK;
+					response.OutputStream.Write(buffer, 0, buffer.Length);
 				}
 			}
-			catch
+			catch (Exception e)
 			{
-				Log.error("error while handling route request");
+				Log.error("error while handling route request: " + e.ToString());
 				response.StatusCode = Messaging.HTTP_SERVER_ERROR;
 			}
 			finally {

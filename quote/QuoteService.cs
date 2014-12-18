@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OnionRouting
 {
-	class QuoteService : OnionService
+	public class QuoteService : OnionService
     {
 		const int DEFAULT_PORT = 8000;
 
@@ -20,7 +20,15 @@ namespace OnionRouting
 		{
 			if (quotes == null)
 				quotes = File.ReadAllLines("quotes.txt");
-			_quotes = quotes;
+
+			List<string> nonEmptyLines = new List<string>();
+			foreach (string line in quotes)
+			{
+				if (!string.IsNullOrWhiteSpace(line))
+					nonEmptyLines.Add(line);
+			}
+
+			_quotes = nonEmptyLines.ToArray();
 		}
 
 		protected override HttpListener createListener()
@@ -62,7 +70,14 @@ namespace OnionRouting
 
 		static void Main(string[] args)
 		{
-			QuoteService quoteService = new QuoteService();
+			int port = DEFAULT_PORT;
+			if (args.Length >= 1)
+			{
+				bool success = int.TryParse(args[0], out port);
+				if (!success)
+					port = DEFAULT_PORT;
+			}
+			QuoteService quoteService = new QuoteService(port);
 			quoteService.start();
 			quoteService.wait();
 		}

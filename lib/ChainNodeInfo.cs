@@ -13,7 +13,7 @@ namespace OnionRouting
         public string IP;
         public string DNS;
         public string Region;
-
+		public int port = 8000;
 
         public String Url;
         private RSAParameters publicKey;

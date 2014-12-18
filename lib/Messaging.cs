@@ -43,19 +43,20 @@ namespace OnionRouting
                     return result;
                 }
             }
-            catch {
+			catch
+			{
                 success = false;
                 return null;
             }
         }
 
-        public static byte[] sendRecv(string url, byte[] data, out bool success)
+		public static byte[] sendRecv(string url, byte[] data, out bool success)
         {
             try
             {
                 HttpWebRequest req = HttpWebRequest.CreateHttp(url);
-                req.Method = "POST";
-                req.ContentType = "multipart/form-data";
+	            req.Method = "POST";
+	            req.ContentType = "multipart/form-data";
                 req.ContentLength = data.Length;
 
                 using (var stream = req.GetRequestStream())
@@ -77,13 +78,13 @@ namespace OnionRouting
             }
         }
 
-        public static byte[] sendRecv(string url, byte[] data, int timeoutMs, out bool success)
+		public static byte[] sendRecv(string url, byte[] data, int timeoutMs, out bool success)
         {
             try
             {
                 HttpWebRequest req = HttpWebRequest.CreateHttp(url);
-                req.Method = "POST";
-                req.ContentType = "multipart/form-data";
+				req.Method = "POST";
+				req.ContentType = "multipart/form-data";
                 req.ContentLength = data.Length;
                 req.Timeout = timeoutMs;
 

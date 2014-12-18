@@ -34,12 +34,11 @@ namespace OnionRouting
             lock (locker)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
+
                 Console.Write("ERROR {0} | ", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
                 Console.WriteLine(format, args);
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
-
-
     }
 }

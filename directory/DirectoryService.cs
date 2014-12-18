@@ -4,18 +4,54 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-
 namespace OnionRouting
 {
-	class DirectoryService : OnionService
+	public class DirectoryService : OnionService
     {
 		const int DEFAULT_PORT = 8000;
 
 		private ChainNodeManager chainNodeManager = null;
 
+		private bool autoStartChainNodes = false;
+
+		public bool AutoStartChainNodes
+		{
+			get {
+				return autoStartChainNodes;
+			}
+			set {
+				autoStartChainNodes = AutoStartChainNodes;
+				if (chainNodeManager != null)
+					chainNodeManager.AutoStartChainNodes = AutoStartChainNodes;
+			}
+		}
+
 		public DirectoryService(int port = DEFAULT_PORT)
 			: base(port)
 		{
+			AutoStartChainNodes = false;
+			chainNodeManager = new ChainNodeManager();
+			chainNodeManager.AutoStartChainNodes = AutoStartChainNodes;
+		}
+
+		public void discoverChainNodes()
+		{
+			if (chainNodeManager != null)
+				chainNodeManager.discoverChainNodes();
+		}
+
+		public void addManualChainNode(ChainNodeInfo node)
+		{
+			if (chainNodeManager != null)
+				chainNodeManager.addManualChainNode(node);
+		}
+
+		public int countReadyNodes()
+		{
+			if (chainNodeManager != null)
+				return chainNodeManager.countReadyNodes();
+
+			return 0;
 		}
 
 		protected override HttpListener createListener()
@@ -25,12 +61,9 @@ namespace OnionRouting
 
 		protected override void onStart()
 		{
-			chainNodeManager = new ChainNodeManager();
-			chainNodeManager.AutoStartChainNodes = true;
-			chainNodeManager.discoverChainNodes();
 			chainNodeManager.start();
 
-			Log.info("chain node up and running (port {0})", port);
+			Log.info("directory service up and running (port {0})", port);
 		}
 
 		protected override void onRequest(HttpListenerContext context)
@@ -76,8 +109,18 @@ namespace OnionRouting
 
         static void Main(string[] args)
         {
-			DirectoryService directoryService = new DirectoryService();
+			int port = DEFAULT_PORT;
+			if (args.Length >= 1)
+			{
+				bool success = int.TryParse(args[0], out port);
+				if (!success)
+					port = DEFAULT_PORT;
+			}
+			DirectoryService directoryService = new DirectoryService(port);
+			directoryService.AutoStartChainNodes = true;
+//			directoryService.AutoStartChainNodes = false;
 			directoryService.start();
+			directoryService.discoverChainNodes();
 			directoryService.wait();
         }
 

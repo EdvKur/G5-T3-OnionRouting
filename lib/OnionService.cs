@@ -8,6 +8,7 @@ namespace OnionRouting
 	{
 		protected int port;
 		protected bool running = false;
+		private bool ready = false;
 
 		private HttpListener listener = null;
 		private Thread serviceThread = null;
@@ -17,13 +18,17 @@ namespace OnionRouting
 			this.port = port;
 		}
 
+		public int getPort()
+		{
+			return port;
+		}
+
 		public void start()
 		{
 			if (running)
 				return;
 
 			listener = createListener();
-			onStart();
 			running = true;
 			serviceThread = new Thread(run);
 			serviceThread.Start();
@@ -34,6 +39,7 @@ namespace OnionRouting
 			if (!running)
 				return;
 
+			ready = false;
 			running = false;
 			onStop();
 
@@ -50,9 +56,9 @@ namespace OnionRouting
 			}
 		}
 
-		public bool isRunning()
+		public bool isReady()
 		{
-			return running;
+			return ready;
 		}
 
 		public void wait()
@@ -71,9 +77,26 @@ namespace OnionRouting
 
 		private void run()
 		{
+			onStart();
+			ready = true;
 			while (running)
 			{
-				onRequest(listener.GetContext());
+				try
+				{
+					onRequest(listener.GetContext());
+				}
+				catch (HttpListenerException e)
+				{
+					if (listener == null || !listener.IsListening)
+					{
+						// the listener has been closed, no point in continuing
+						break;
+					}
+					else
+					{
+						Log.error(e.ToString());
+					}
+				}
 			}
 		}
 	}

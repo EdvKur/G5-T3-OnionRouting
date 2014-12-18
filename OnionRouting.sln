@@ -47,7 +47,7 @@ Global
 		{F8C8E80D-15A0-41E8-BF52-6A348C28B2EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = directory\directory.csproj
+		StartupItem = tests\tests.csproj
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
