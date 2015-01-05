@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F8C8E80D-15A0-41E8-BF52-6A348C28B2EC}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>tests</RootNamespace>
+    <AssemblyName>tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="nunit.framework" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CryptoTest.cs" />
+    <Compile Include="LocalWorkflowTest.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\lib\lib.csproj">
+      <Project>{5AD9014E-0C2A-4291-8924-789998CCA0F9}</Project>
+      <Name>lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\chain\chain.csproj">
+      <Project>{768D99E4-42E4-4AE7-9827-C59646A7CBC3}</Project>
+      <Name>chain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\directory\directory.csproj">
+      <Project>{53551A3C-C72A-4E38-A783-4618F3869398}</Project>
+      <Name>directory</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\quote\quote.csproj">
+      <Project>{68B31BE1-E076-4117-88A5-5FB1EB7D0E90}</Project>
+      <Name>quote</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\originator\originator.csproj">
+      <Project>{4A5506B2-4E60-496E-96B8-C1009B44BE07}</Project>
+      <Name>originator</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

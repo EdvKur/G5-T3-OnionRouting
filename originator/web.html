@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <link rel="icon" href="../../favicon.ico" />
+    <title>Onion Routing</title>
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+	<link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet" />
+
+	<style>
+		  body {
+		  padding-top: 40px;
+		  padding-bottom: 40px;
+		  background-color: #eee;
+		}
+
+		.form-signin {
+		  max-width: 330px;
+		  padding: 15px;
+		  margin: 0 auto;
+		}
+		.form-signin .form-signin-heading,
+		.form-signin .checkbox {
+		  margin-bottom: 10px;
+		}
+		.form-signin .checkbox {
+		  font-weight: normal;
+		}
+		.form-signin .form-control {
+		  position: relative;
+		  height: auto;
+		  -webkit-box-sizing: border-box;
+			 -moz-box-sizing: border-box;
+				  box-sizing: border-box;
+		  padding: 10px;
+		  font-size: 16px;
+		}
+		.form-signin .form-control:focus {
+		  z-index: 2;
+		}
+		
+		#response0{
+			display:block;
+			margin-top: 30px;
+			margin-left: 15px;
+			margin-right: 15px;
+			text-align:center;
+			font-style:italic;
+		}
+				
+		span {
+			padding-left: 30px;
+		}
+		
+		li {
+			padding-top: 5px;
+		}
+		
+		.encryptedMessage {
+			word-wrap:break-word;
+			display:block;
+			width:100%;
+		}
+		
+		.hiddenElem{
+			display:none;
+		}
+		
+		.glyphicon{
+			cursor:pointer;
+		}
+		
+		.listing{
+			font-weight: bold;
+		}
+		
+		.center {
+			text-align: center;
+		}
+		
+		.nodeText {
+			font-size: 20px;
+			margin-left: -35px;
+		}
+		
+		h2 {
+			text-align:center;
+		}
+        		
+	  </style>
+
+    <!-- Custom styles for this template -->
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <form class="form-signin" role="form">
+        <h2 class="form-signin-heading">Gruppe 5 Lab 3</h2>
+        <input type="button" id="btnSendRequest" class="btn btn-lg btn-primary btn-block" data-loading-text="Loading..."  onclick="sendRequest();" value="Bitte um Zitat" ></input>
+		<br /><br />
+      </form>
+	  <div class="row hiddenElem" id="results" style="background-color:white;border-radius:5px;" >
+		<div class="col-md-12 center" >
+			<h2 id="response0">asdf</h2><br /><br />
+		</div>
+		<div class="col-md-4 center" >
+			<img src="http://c84.imgup.net/pcbaa2.png" alt="Entry Node"></img><br/><br/>
+			<span class="nodeText">Entry Node</span> <br />
+			<span id="request1" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request4" class="encryptedMessage hiddenElem"></span>
+		</div>
+		<div class="col-md-4 center" >
+			<img src="http://c84.imgup.net/pcbaa2.png" alt="Intermediary Node"></img><br /><br/>
+			<span class="nodeText">Intermediary Node</span> <br />
+			<span id="request2" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request5" class="encryptedMessage hiddenElem"></span>
+		</div>
+		<div class="col-md-4 center" >
+			<img src="http://c84.imgup.net/pcbaa2.png" alt="Exit Node"></img><br /><br/>
+			<span class="nodeText">Exit Node</span><br />
+			<span id="request3" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="request6" class="encryptedMessage hiddenElem"></span>
+		</div>
+	  </div>
+	  <div class="row hiddenElem" id="results" >
+		<div class="col-md-6">
+			<ol class="chain_ips">
+				<h3>Hinweg</h3>
+				<li></li>
+				<li></li>
+				<li></li>
+			</ol>
+			<p id="request7"></p>
+			<p id="request8"></p>
+			<p id="request9"></p>
+			<p id="request10"></p>
+			<p id="request11"></p>
+			<p id="request12"></p>
+		</div>
+		<div id="chainBack" class="col-md-6">
+			<ol class="chain_ips">
+				<h3>Rückweg</h3>
+				<li><span id="response1" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="response4" class="encryptedMessage hiddenElem"></span></li>
+				<li><span id="response2" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="response5" class="encryptedMessage hiddenElem"></span></li>
+				<li><span id="response3" class="listing"></span><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true" ></span><span class="glyphicon glyphicon-circle-arrow-up hiddenElem" aria-hidden="true" ></span><br /><span id="response6" class="encryptedMessage hiddenElem"></span></li>
+			</ol>
+		</div>
+	   </div>
+    </div> <!-- /container -->
+	
+	<script type="text/javascript">
+		var $j = jQuery.noConflict();
+		$j(".glyphicon-circle-arrow-down").click(function() {
+			$j(this).addClass("hiddenElem");
+			$j(this).siblings(".glyphicon-circle-arrow-up").removeClass("hiddenElem");
+			$j(this).siblings(".encryptedMessage").slideDown("fast");
+		});	
+		
+		$j(".glyphicon-circle-arrow-up").click(function() {
+			$j(this).addClass("hiddenElem");
+			$j(this).siblings(".glyphicon-circle-arrow-down").removeClass("hiddenElem");
+			$j(this).siblings(".encryptedMessage").slideUp("fast");
+		});	
+				
+		$j(document).ajaxError(function(event, request, settings) {
+			$j("#response0").val("");
+			$j("#request1").html("");
+			$j("#request2").html("");
+			$j("#request3").html("");
+			$j("#request4").html("");
+			$j("#request5").html("");
+			$j("#request6").html("");
+			$j("#request7").html("");
+			$j("#request8").html("");
+			$j("#request9").html("");
+			$j("#request10").html("");
+			$j("#request11").html("");
+			$j("#request12").html("");
+			$j("#response0").hide();
+			$j("#results").hide();
+			$j("#btnSendRequest").button('reset');
+		});
+        function sendRequest(){
+           $j.ajax({
+                type: "POST",
+                url: "http://localhost:8000/handle",
+            })
+        .success(function (ret) {
+			var res = ret.replace(/\</g,"&lt;");
+			res = res.replace(/\>/g,"&gt;")  
+			res = res.split("\r\n"); 
+			$j("#results").show();
+			$j("#response0").show();
+			$j("#response0").html(res[0]);
+			$j.each(res, function (i,l){
+				$j("#request" + i).html(res[i]);
+			});
+			$j("#btnSendRequest").button('reset');
+			})
+		.error(function(ret){
+				alert("Der Directory-Dienst steht leider nicht zur Verfügung.");
+			});
+			$j("#btnSendRequest").button('loading');
+		}
+    </script>
+
+  </body>
+</html>
