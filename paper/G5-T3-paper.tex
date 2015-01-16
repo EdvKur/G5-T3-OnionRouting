@@ -1,0 +1,223 @@
+% This file should be compiled with V2.5 of "sig-alternate.cls" May 2012
+
+\documentclass{sig-alternate}
+
+\begin{document}
+%
+% --- Author Metadata here ---
+% \conferenceinfo{WOODSTOCK}{'97 El Paso, Texas USA}
+%\CopyrightYear{2007} % Allows default copyright year (20XX) to be over-ridden - IF NEED BE.
+%\crdata{0-12345-67-8/90/01}  % Allows default copyright data (0-89791-88-6/97/05) to be over-ridden - IF NEED BE.
+% --- End of Author Metadata ---
+
+\title{State of the art in Anonymity Networks}
+\subtitle{Advanced Internet Computing, WS2014}
+
+\numberofauthors{4} 
+\author{
+\alignauthor
+Edvin Kuric\\
+       \affaddr{1028327}\\
+       \email{e1028327@student.\\
+       tuwien.ac.at}
+\alignauthor
+Philipp Schindler\\
+       \affaddr{1128993}\\
+       \email{e1128993@student.\\
+       tuwien.ac.at}
+\and
+\alignauthor Richard Bayerle\\
+       \affaddr{1025259}\\
+       \email{e1025259@student.\\
+       tuwien.ac.at}
+\alignauthor Julian Kowanz\\
+       \affaddr{0727397}\\
+       \email{e0727397@student.\\
+       tuwien.ac.at}
+}
+\date{11 January 2015}
+\maketitle
+
+
+\begin{abstract}
+This paper provides an overview of the scientific state of the art in anonymity networks.
+\end{abstract}
+
+\keywords{Anonymity Networks, Onion Routing, Tor}
+
+\section{Introduction}
+TODO
+
+\section{Onion routing}
+\emph{Onion routing} is a technique that uses cryptography to provide \emph{anonymous connections}
+through the network. It uses \emph{application proxies}, \emph{onion proxies} and
+\emph{onion routers} which use regular TCP/IP connections to communicate among themselves
+to form virtual \emph{anonymous connections} \cite{reed1998}.
+
+\subsection{Establishing anonymous connections}
+As a fist step, the application connects to the \emph{application proxy} the same way it would to
+any ordinary proxy server. The \emph{application proxy} must understand the protocol used by the
+application (e.g. HTTP) to be able to convert the packets it receives from the application into an
+application-independent format. It then connects to the \emph{onion proxy} to request the
+creation of a new anonymous connection to the destination the the application intended to connect to.
+
+The \emph{onion proxy} has a list of all \emph{onion routers} it can potentially use to form
+the anonymous connection. It selects a chain of routers and creates a special message (the \emph{onion})
+that is passed along the chain until it reaches the last router (the \emph{exit funnel}), which then
+opens a connection to the recipient originally intended by the application.
+
+The \emph{onion} consists of multiple layers, each intended for one of the \emph{routers} used.
+These layers each contain the information about the next \emph{router} in the chain and are encrypted
+in such a way that each layer can only be decrypted by the corresponding \emph{router}. So, when receiving
+the \emph{onion}, each \emph{router} decrypts (\emph{peels away}) its layer and passes the rest of the
+\emph{onion} along to the next \emph{router}. The innermost layer contains information about the
+recipient which the \emph{exit funnel} can use to connect to.
+
+Each time a layer is removed, the \emph{onion} shrinks in size. This effect could be used to help traffic
+analysis determine the link between originator and recipient. To avoid this issue, a padding of random data
+is added each time a layer is removed, so all the \emph{onion} packets look the same from the
+outside \cite{ren2009}.
+
+After the \emph{onion} is passed through the chain of \emph{routers}, the \emph{anonymous connection}
+is established and can be used to transmit data back and forth.
+
+\subsection{Using anonymous connections}
+After the \emph{anonymous connection} has been successfully established, everything sent by the application
+to the \emph{application proxy} is simply passed along to the \emph{onion proxy} which then encrypts the
+data in layers similar to the way the \emph{onion} was created. The innermost layer, again, is decrypted
+by the \emph{exit funnel} and contains the data the application sent.
+
+When data is sent in the other direction (from the recipient back to the application) the encryption layers
+are created in reverse order. It will eventually arrive back at the \emph{application proxy}, which can send
+it back to the application in plain text thus allowing for two-way anonymous communications.
+
+This whole process is completely transparent to the application because it only ever directly communicates
+with the \emph{application proxy}. Applications, therefore, don't need to explicitly support
+\emph{Onion routing} in order to use it - all that is needed is an appropriate \emph{application proxy}.
+
+\subsection{Anonymity}
+\emph{Onion routing} is designed to protect against traffic analysis by hiding the source and destination of a
+packet. Though not its primary purpose, it can also protect against eavesdropping as a side effect because
+the communication between \emph{onion routers} is encrypted \cite{reed1998}.
+
+The anonymity provided by \emph{onion routing} comes from the fact that the recipient has no way
+of determining the identity of the client it actually communicates with. It cannot differentiate
+between direct connections and \emph{anonymous connections} opened by the \emph{exit funnel}.
+
+Assuming the \emph{onion proxy} is trusted, the identities of the originator and the recipient are
+never both in clear text at any point. In order to link these two together for traffic analysis,
+\emph{all} of the \emph{routers} in the chain would have to be compromised, if at least one
+\emph{router} is honest, the anonymity holds \cite{reed1998}.
+
+
+\section{Tor}
+\emph{Tor}, also known as \emph{the second-generation Onion Routing system}, is an
+overhaul of the original \emph{onion routing} system that provides several benefits over its predecessor.
+These benefits include \emph{perfect forward secrecy}, removing the need for \emph{application proxies},
+multiple TCP streams over one \emph{circuit}, \emph{directory servers} and more \cite{tor2004}.
+
+It is free
+to use by anyone and its infrastructure is entirely comprised of internet-connected machines that are
+set up by volunteers to act as \emph{directory nodes} and \emph{routers}.
+
+\subsection{Terminology}
+The virtual connections used by \emph{Tor} to communicate anonymously are referred to as \emph{circuits}
+in the literature.
+
+\emph{Entry funnels} and \emph{exit funnels} are called \emph{entry nodes} and \emph{exit nodes},
+respectively.
+
+\subsection{Changes from first-generation onion routing}
+This is a non-comprehensive list of some of the improvements \emph{Tor} made over 
+\emph{first-generation onion routing}. For a complete list, see \cite{tor2004}.
+
+\subsubsection{Perfect forward secrecy}
+\emph{Tor} provides \emph{perfect forward secrecy} by using \emph{session keys} for encryption.
+If an attacker were to compromise a node, it could not decrypt old traffic it has routed before
+because the corresponding session key would have been deleted by then.
+
+\subsubsection{No application proxy}
+\emph{Tor} eliminates the need for an \emph{application proxy}. Instead, the (locally running) 
+\emph{onion proxy} uses the standard SOCKS interface to communicate with applications.
+
+This simplifies the design and makes the network usable with more types of applications.
+
+\subsubsection{Directory nodes}
+In \emph{first-generation onion routing}, \emph{routers} sent out status messages to neighbouring
+\emph{routers}, which propagated them further to spread throughout the network. \emph{Tor} uses
+a more centralised approach by introducing \emph{directory nodes}.
+
+\emph{Directory nodes} are - as the name implies - directories where users can retrieve a list of
+routers that can be used to form a \emph{circuit}. Directory nodes need to be trustworthy because
+a malicious directory node could cause the user to only use routers under its control, rendering
+the anonymity of the user ineffective. To circumvent this problem, \emph{Tor} only uses a few,
+well-known directory nodes that are synchronised so they all send the same list of routers. \cite{tor2004}
+
+\subsubsection{Reusing circuits}
+In \emph{first-generation onion routing}, the whole process of creating an \emph{onion} and sending
+it through the \emph{routers} to create a \emph{circuit} was done every time the user's application
+opened a new connection. This caused a lot of overhead in applications that use short-lived connections.
+
+\emph{Tor}, instead, routes all TCP traffic through one \emph{circuit} for as long as it is active.
+\emph{Circuits} do have a timeout though, so new \emph{circuits} (with a different chain of \emph{routers})
+are periodically generated to make traffic analysis harder.
+
+\subsection{Vulnerabilities}
+
+\subsubsection{Denial of service}
+Tor \emph{routers} are relatively vulnerable to denial of service attacks because a malicious
+\emph{onion proxy} can force the \emph{router} to do expensive cryptographic operations while
+the \emph{proxy} requires few computational resources to carry out the attack \cite{tor2004}.
+
+\emph{Tor} is also particularly vulnerable to a \emph{router} that temporarily stops to function
+because it breaks all \emph{circuits} that go through that router. As opposed to normal network
+traffic, where packets are then just routed differently, there is no fail safe for this in \emph{tor}
+and the application loses the connection.
+
+\subsubsection{End-to-end timing correlation}
+An attacker who observes patterns of traffic into- and out of the \emph{Tor} network can link
+the two involved parties of a connection together with high priority based on the timing correlation
+of the connections to the entry- and exit nodes \cite{tor2004}.
+
+\subsubsection{Website fingerprinting}
+An attacker could load a website to observe patterns in the traffic that such a request creates.
+These observed patterns can then be saved as the website's \emph{fingerprint}. If the attacker
+can then observe the traffic between a \emph{Tor} user and his \emph{entry node}, he could watch
+for this \emph{fingerprint} and infer that the user loaded the same website with high probability.
+
+Of course this attack can be scaled up so the attacker has an entire database of \emph{website
+fingerprints}, which could allow him to get a relatively complete picture of the user's browsing
+habits even if no direct connection to anything other than the \emph{entry node} is observed
+\cite{panchenko2011}.
+
+\subsubsection{Replay attack}
+If an attacker has control of both the \emph{entry-} and \emph{exit nodes} of a circuit, he
+can carry out a \emph{replay attack}\cite{pries2007} to break the user's anonymity.
+
+To carry out this attack, the \emph{entry node} duplicates one of the cells used to carry data
+across the \emph{circuit} which causes an decryption error to occur on the \emph{exit node}.
+Since the timing of the duplication and the error correlates, the attacker can confirm that
+these two nodes are used together in the same \emph{circuit}. The attacker can then simply
+look up the client's identity in the \emph{entry node} and the server's identity in the
+\emph{exit node}.
+
+\section{Mixnet}
+TODO
+
+
+\section{Crowds}
+TODO
+
+\section{Tarzan}
+TODO
+
+
+\bibliographystyle{abbrv}
+\bibliography{G5-T3-paper}
+% You must have a proper ".bib" file
+%  and remember to run:
+% latex bibtex latex latex
+% to resolve all references
+%
+
+\end{document}
