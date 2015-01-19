@@ -10,7 +10,7 @@
 %\crdata{0-12345-67-8/90/01}  % Allows default copyright data (0-89791-88-6/97/05) to be over-ridden - IF NEED BE.
 % --- End of Author Metadata ---
 
-\title{State of the art in Anonymity Networks}
+\title{State of the Art in Anonymity Networks}
 \subtitle{Advanced Internet Computing, WS2014}
 
 \numberofauthors{4} 
@@ -46,7 +46,24 @@ This paper provides an overview of the scientific state of the art in anonymity 
 \keywords{Anonymity Networks, Onion Routing, Tor}
 
 \section{Introduction}
-TODO
+While connections can be encrypted to hide the contents of the transmission, for example using TLS and SSL, the source and destination are still clearly visible.
+\\
+This is where anonymity networks come in.
+The service at the destination does not know where the request originated from, as it only sees the most recent endpoint.
+Some even go as far as to hide even the service from the user, using intermediary nodes to communicate.
+\\
+\\
+Unfortunately, this is not just a theoretical concept that is fun to think about.
+\\
+In some parts of the world anonymity is just the luxury to not be constantly tracked on the web by websites, or on a whole different scale, by law enforcement.
+The latter often happens for no particular reason through mass storage of connection data.
+\\
+In other parts though, anonymity can help access withheld information, or save a person releasing such information from persecution.
+\\
+All in all, it is not surprising that \emph{TOR} was first developed by the U.S. Naval Research Laboratory, which shows that it is an important topic.
+It still is important today and will stay current for the foreseeable future, as new research is done on flaws and improvements\cite{craven2010}.
+
+The topics analyzed in this paper are two of the most popular low-latency networks, \emph{Tor} and \emph{I2P}.
 
 \section{Onion routing}
 \emph{Onion routing} is a technique that uses cryptography to provide \emph{anonymous connections}
@@ -147,7 +164,7 @@ In \emph{first-generation onion routing}, \emph{routers} sent out status message
 \emph{routers}, which propagated them further to spread throughout the network. \emph{Tor} uses
 a more centralised approach by introducing \emph{directory nodes}.
 
-\emph{Directory nodes} are - as the name implies - directories where users can retrieve a list of
+\emph{Directory nodes} are --- as the name implies --- directories where users can retrieve a list of
 routers that can be used to form a \emph{circuit}. Directory nodes need to be trustworthy because
 a malicious directory node could cause the user to only use routers under its control, rendering
 the anonymity of the user ineffective. To circumvent this problem, \emph{Tor} only uses a few,
@@ -162,22 +179,55 @@ opened a new connection. This caused a lot of overhead in applications that use 
 \emph{Circuits} do have a timeout though, so new \emph{circuits} (with a different chain of \emph{routers})
 are periodically generated to make traffic analysis harder.
 
-\subsection{Vulnerabilities}
+\subsubsection{Hidden services}
+\emph{Tor} allows the creation of so-called \emph{hidden services} which are then only reachable from inside
+the \emph{Tor} network.
+They are not only called hidden because they cannot be reached from the regular web, but also because they
+are only accessible via a pseudonym instead of their IP, so that their location is actually hidden.
+This protects the provider of a service from prosecution, as opposed to only the user being anonymous\cite{biryukov2013}.
+\\
+One of the goals of this feature was application--transparency, so assuming correct configuration of the
+\emph{Tor} software, the server does not need to be changed and is often a regular web
+server\cite{tor2004}.
+Other types of services, e.g. chat servers, exist as well\cite{biryukov2013}.
+\\
+\\
+The technique making this possible are \emph{rendezvous points}.
+To make a service available as a \emph{Tor hidden service}, the owner has to create a long--term public key pair.
+Now some \emph{onion routers} have to be chosen as \emph{introduction points} and advertised to the lookup service.
+These \emph{introduction points} have to be signed with the generated public key and can be changed at a later time as well.
+Now a \emph{circuit} to each of these introduction points is established, which wait for requests.
+\\
+A Tor user wanting to access this server has to learn of its pseudonym and ask the lookup service for the introduction points.
+The pseudonym is simply the hash of the public key, and ends with \texttt{.onion}.
+A random \emph{Tor node} is then chosen as the aforementioned \emph{rendezvous point} and an introduction point asked to relay this information to the \emph{Hidden Service}.
+This \emph{rendezvous point} will then be used for communication between the user and the service.
+Note that this way:
+\begin{itemize}
+\item{Both the user and service know the \emph{rendezvous point}, but not each other}
+\item{There is still a circuit between each of them and the \emph{rendezvous point}}
+\item{The \emph{rendezvous point} does not know anything (neither the location of either end, nor the transmitted information)}
+\end{itemize}
+\cite{syverson2006}
 
+\subsection{Vulnerabilities}
 \subsubsection{Denial of service}
 Tor \emph{routers} are relatively vulnerable to denial of service attacks because a malicious
 \emph{onion proxy} can force the \emph{router} to do expensive cryptographic operations while
 the \emph{proxy} requires few computational resources to carry out the attack \cite{tor2004}.
-
+\\
 \emph{Tor} is also particularly vulnerable to a \emph{router} that temporarily stops to function
 because it breaks all \emph{circuits} that go through that router. As opposed to normal network
 traffic, where packets are then just routed differently, there is no fail safe for this in \emph{tor}
 and the application loses the connection.
+\\
+\emph{Hidden Services} cannot be attacked directly using a DDoS--attack.
+The only other way is attacking the whole network.
+Unfortunately for the network, this does happen from time to time and leads to not only one site being unusable,
+but the whole network\cite{syverson2006}.
 
 \subsubsection{End-to-end timing correlation}
-An attacker who observes patterns of traffic into- and out of the \emph{Tor} network can link
-the two involved parties of a connection together with high priority based on the timing correlation
-of the connections to the entry- and exit nodes \cite{tor2004}.
+Since no delay is introduced inbetween hops, an attacker who observes patterns of traffic into- and out of the \emph{Tor} network can link the two involved parties of a connection together with high priority based on the timing correlation of the connections to the entry- and exit nodes \cite{tor2004}.
 
 \subsubsection{Website fingerprinting}
 An attacker could load a website to observe patterns in the traffic that such a request creates.
@@ -200,6 +250,100 @@ Since the timing of the duplication and the error correlates, the attacker can c
 these two nodes are used together in the same \emph{circuit}. The attacker can then simply
 look up the client's identity in the \emph{entry node} and the server's identity in the
 \emph{exit node}.
+
+\section{I2P}
+I2P is the common abbreviation of \emph{Invisible Internet Project}.
+It is based on \emph{Garlic Routing} which will be explained in detail in the next section.
+Even though it shares many of its functioning principles with \emph{Tor}, it has a different focus.
+
+\subsection{Garlic Routing Terminology}
+As the name suggests, it is inspired by \emph{Onion Routing} which was explained earlier.
+This section will compare some basic design desicions.
+
+\subsubsection{Cloves}
+\emph{Tor} uses \emph{cells} of fixed size to hide information about the data transmitted between nodes, but a temporal context of the \emph{cell} entering and exiting a circuit can still be established.
+Here, so--called \emph{cloves} are used instead.
+\\
+In essence, they are multiple \emph{cells} packed together, but there are additional refinements.
+Each node packs a different amount of \emph{cells} into a \emph{clove}, and random padding is added.
+Additionally, there are delay, delivery and priority instructions for each \emph{cell}.
+\\
+So instead of just receiving and forwarding packets, the node has to decrypt the \emph{clove} to extract the different \emph{cells} and then pack them into different \emph{cloves} depending on the additional instactions and the local \emph{clove} size before encrypting and forwarding them to the next\cite{zantout2011}.
+\\
+\\
+The term is a bit confusing, since a single cell of a garlic is usually called ``clove'', but on the official website it is explained that it is their term for garlic bulbs\cite{garlic}.
+
+\subsubsection{Tunnels}
+Although the idea of a \emph{circuit} still exists, the approach described in the previous subsection makes it clear that \emph{I2P} is more of a messaged--based system.
+Even \emph{cells} that belong to the same connection can and will take a different route through the network, as each of them is repacked into different \emph{cloves}.
+This also implies that the response will use a different path.
+\\
+\\
+Each \emph{I2P} client creates two \emph{inbound} and \emph{outbound} \emph{tunnels} each by selecting available nodes.
+They are changed every 10 minutes.
+For sending a message, a \emph{clove} is send through the \emph{outbound tunnel}, and as soon as it is at the end of its path, it will continue to hop until it arrived at the destination.
+The sender therefore does not know about the path the message will take\cite{olivier2011}.
+\subsubsection{NetDB}
+As described before, \emph{Tor} uses trusted directory nodes to supply the client with a \emph{circuit}.
+This can be seen as a reliability bottleneck, since there are not many of them.
+\emph{I2P} uses \emph{Kademlia}, which is an implementation of a \emph{distributed hash table} (DHT), instead.
+It is a decentralized lookup table with great performance, scalability and fault tolerance properties.
+This part of the system is called \emph{NetDB}.
+\\
+\\
+When a client first connects to the network, it does use one of the predefined ``good'' hosts though.
+Then, additional nodes are discovered.
+
+\subsubsection{Services}
+\emph{Exit nodes} which are used to access the internet are a central part of the \emph{Tor} network.
+In contrast, the base principle of \emph{I2P} is communication between \emph{I2P} clients and the number of out-proxies is limited\cite{olivier2011}.
+The focus on applications can be easily seen by looking at the programs coming bundled with the client.
+They include a \emph{BitTorrent} client named \emph{I2PSnark}, an email client named \emph{susimail}, and even a web server to host a website\cite{i2p}.
+These are called \emph{Eepsites} and use the fake domain \texttt{.i2p}.
+\\
+\\
+According to \cite{olivier2011}, more than 25\% of clients are using the \emph{I2PSnark Bittorrent} client, as opposed to about 3\% of \emph{Tor} users.
+Another 30\% of applications could not be tagged.
+In any case, this proves a diversity of uses, as was intended by the developers.
+
+\subsection{Vulnerabilities}
+\subsubsection{Improvements}
+\emph{I2P} might have achieved some of its goals in improving \emph{Onion Routing}, but not all of them, and introduced some new ones.
+\\
+For example, by using \emph{cloves} instead of \emph{cells}, \emph{end--to--end correlation attacks} were mitigated, as each \emph{cell} inside of a \emph{clove} can have its own delay.
+\\
+By using a \emph{DHT} for routing information, the network was decentralized and therefore made more robust\cite{zantout2011}.
+
+\subsubsection{Denial of Service}
+Unfortunately for the network, there are still other types of DoS attacks to be performed.
+\\
+For example, a \emph{starvation attack} could be performed, during which the attacker lets a big number of malicious nodes join the network and drop packets after establishing a connection.
+Participating with a lot of malicious nodes is considered a classic attack on anonymization networks and is called \emph{sybil attack}.
+\\
+Considering that the \emph{I2P} network is much smaller than \emph{Tor}, resources can be easily depleted by injecting one node into the network that generates huge amounts of traffic\cite{zantout2011}.
+
+\subsubsection{Deanonymization of users}
+In \cite{egger2013}, an attack that combined several steps was performed to obtain the IP of clients with a high probability (about 80\%).
+\\
+The first step was to take over most of the \emph{netDB} by replacing the active nodes one by one.
+As the number is regulated by the network and usually the participation is automatic, a malicious node with activated participation can be started up while DoSing an actual node.
+At some point it will drop its participation for performance reasons, and assuming the amount of needed \emph{DHT} nodes did not increase, the node was successfully replaced by a malicious one.
+\\
+The second step is a classical \emph{Sybil} attack as described before to have many nodes in the topographical viscinity of the victim.
+\\
+Now there is a high probability that any kind of interaction the victim has with the network will be with one of the nodes, some of which are participating in the \emph{DHT}.
+This together with the fact that storing to the \emph{DHT} is done in the clear can be then used to link the target and the observed IP.
+
+\subsubsection{Information disclosure through users}
+As mentioned before, each \emph{I2P} client comes with a webserver so that the user can run his or her own \emph{Eepsite}.
+This is different from \emph{Tor}, as additional effort is required to set up a hidden service.
+\\
+Since it is so easy, it is not unprobable that this feature will be used by unexperienced users.
+In fact, servers of \emph{Eepsites} often respond with a verbose header that allows for profiling if the same machine runs an unrelated site on the open web.
+\\
+\\
+A lot of public websites have huge security issues that even allow for code execution, e.g. using the PHP \texttt{shell\_exec} function in an unsafe way.
+This can be used to send a request to a machine owned by the attacker, if an \emph{Eepsite} does the same\cite{crenshaw2011}.
 
 \section{Mixnet}
 TODO
