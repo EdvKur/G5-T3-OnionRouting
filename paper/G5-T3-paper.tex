@@ -40,22 +40,22 @@ Philipp Schindler\\
 
 
 \begin{abstract}
-This paper provides an overview of the scientific state of the art in anonymity networks.
+This paper provides an overview of some state--of--the--art scientific papers on anonymity networks.
 \end{abstract}
 
 \keywords{Anonymity Networks, Onion Routing, Tor}
 
 \section{Introduction}
-While connections can be encrypted to hide the contents of the transmission, for example using TLS and SSL, the source and destination are still clearly visible.
+While connections can be encrypted to hide the contents of a transmission, for example using TLS and SSL, the source and destination are still clearly visible.
 \\
 This is where anonymity networks come in.
 The service at the destination does not know where the request originated from, as it only sees the most recent endpoint.
-Some even go as far as to hide even the service from the user, using intermediary nodes to communicate.
+Some even go as far as to hide the service from the user, using intermediary nodes to communicate.
 \\
 \\
-Unfortunately, this is not just a theoretical concept that is fun to think about.
+However, anonymity networks are not just a theoretical concept that is fun to think about.
 \\
-In some parts of the world anonymity is just the luxury to not be constantly tracked on the web by websites, or on a whole different scale, by law enforcement.
+In some parts of the world anonymity is the luxury to not be constantly tracked on the web by websites, or on a whole different scale, by law enforcement.
 The latter often happens for no particular reason through mass storage of connection data.
 \\
 In other parts though, anonymity can help access withheld information, or save a person releasing such information from persecution.
@@ -72,9 +72,9 @@ through the network. It uses \emph{application proxies}, \emph{onion proxies} an
 to form virtual \emph{anonymous connections} \cite{reed1998}.
 
 \subsection{Establishing anonymous connections}
-As a fist step, the application connects to the \emph{application proxy} the same way it would to
+As a first step, the application connects to the \emph{application proxy} the same way it would to
 any ordinary proxy server. The \emph{application proxy} must understand the protocol used by the
-application (e.g. HTTP) to be able to convert the packets it receives from the application into an
+application (e.g. HTTP) to be able to convert the packets it receives into an
 application-independent format. It then connects to the \emph{onion proxy} to request the
 creation of a new anonymous connection to the destination the the application intended to connect to.
 
@@ -88,7 +88,7 @@ These layers each contain the information about the next \emph{router} in the ch
 in such a way that each layer can only be decrypted by the corresponding \emph{router}. So, when receiving
 the \emph{onion}, each \emph{router} decrypts (\emph{peels away}) its layer and passes the rest of the
 \emph{onion} along to the next \emph{router}. The innermost layer contains information about the
-recipient which the \emph{exit funnel} can use to connect to.
+recipient which the \emph{exit funnel} can use to connect.
 
 Each time a layer is removed, the \emph{onion} shrinks in size. This effect could be used to help traffic
 analysis determine the link between originator and recipient. To avoid this issue, a padding of random data
@@ -161,7 +161,7 @@ This simplifies the design and makes the network usable with more types of appli
 
 \subsubsection{Directory nodes}
 In \emph{first-generation onion routing}, \emph{routers} sent out status messages to neighbouring
-\emph{routers}, which propagated them further to spread throughout the network. \emph{Tor} uses
+\emph{routers}, which propagated them further throughout the network. \emph{Tor} uses
 a more centralised approach by introducing \emph{directory nodes}.
 
 \emph{Directory nodes} are --- as the name implies --- directories where users can retrieve a list of
@@ -194,9 +194,9 @@ Other types of services, e.g. chat servers, exist as well\cite{biryukov2013}.
 \\
 The technique making this possible are \emph{rendezvous points}.
 To make a service available as a \emph{Tor hidden service}, the owner has to create a long--term public key pair.
-Now some \emph{onion routers} have to be chosen as \emph{introduction points} and advertised to the lookup service.
+Then some \emph{onion routers} have to be chosen as \emph{introduction points} and advertised to the lookup service.
 These \emph{introduction points} have to be signed with the generated public key and can be changed at a later time as well.
-Now a \emph{circuit} to each of these introduction points is established, which wait for requests.
+Then a \emph{circuit} to each of these introduction points is established, which wait for requests.
 \\
 A Tor user wanting to access this server has to learn of its pseudonym and ask the lookup service for the introduction points.
 The pseudonym is simply the hash of the public key, and ends with \texttt{.onion}.
@@ -268,7 +268,7 @@ In essence, they are multiple \emph{cells} packed together, but there are additi
 Each node packs a different amount of \emph{cells} into a \emph{clove}, and random padding is added.
 Additionally, there are delay, delivery and priority instructions for each \emph{cell}.
 \\
-So instead of just receiving and forwarding packets, the node has to decrypt the \emph{clove} to extract the different \emph{cells} and then pack them into different \emph{cloves} depending on the additional instactions and the local \emph{clove} size before encrypting and forwarding them to the next\cite{zantout2011}.
+So instead of just receiving and forwarding packets, the node has to decrypt the \emph{clove} to extract the different \emph{cells} and then pack them into different \emph{cloves} depending on the additional instructions and the local \emph{clove} size before encrypting and forwarding them to the next\cite{zantout2011}.
 \\
 \\
 The term is a bit confusing, since a single cell of a garlic is usually called ``clove'', but on the official website it is explained that it is their term for garlic bulbs\cite{garlic}.
@@ -281,22 +281,22 @@ This also implies that the response will use a different path.
 \\
 Each \emph{I2P} client creates two \emph{inbound} and \emph{outbound} \emph{tunnels} each by selecting available nodes.
 They are changed every 10 minutes.
-For sending a message, a \emph{clove} is send through the \emph{outbound tunnel}, and as soon as it is at the end of its path, it will continue to hop until it arrived at the destination.
+For sending a message, a \emph{clove} is sent through the \emph{outbound tunnel}, and as soon as it is at the end of its path, it will continue to hop until it arrives at the destination.
 The sender therefore does not know about the path the message will take\cite{olivier2011}.
 \subsubsection{NetDB}
 As described before, \emph{Tor} uses trusted directory nodes to supply the client with a \emph{circuit}.
-This can be seen as a reliability bottleneck, since there are not many of them.
+This can be seen as a reliability bottleneck, since there are not many trusted directory nodes.
 \emph{I2P} uses \emph{Kademlia}, which is an implementation of a \emph{distributed hash table} (DHT), instead.
 It is a decentralized lookup table with great performance, scalability and fault tolerance properties.
 This part of the system is called \emph{NetDB}.
 \\
 \\
-When a client first connects to the network, it does use one of the predefined ``good'' hosts though.
+When a client first connects to the network, it does use one of the predefined ``good'' hosts.
 Then, additional nodes are discovered.
 
 \subsubsection{Services}
-\emph{Exit nodes} which are used to access the internet are a central part of the \emph{Tor} network.
-In contrast, the base principle of \emph{I2P} is communication between \emph{I2P} clients and the number of out-proxies is limited\cite{olivier2011}.
+In contrast, the base principle of \emph{I2P} is communication between \emph{I2P} clients; the number of out-proxies is limited\cite{olivier2011}.
+f\emph{Exit nodes} which are used to access the internet are a central part of the \emph{Tor} network.
 The focus on applications can be easily seen by looking at the programs coming bundled with the client.
 They include a \emph{BitTorrent} client named \emph{I2PSnark}, an email client named \emph{susimail}, and even a web server to host a website\cite{i2p}.
 These are called \emph{Eepsites} and use the fake domain \texttt{.i2p}.
@@ -308,14 +308,14 @@ In any case, this proves a diversity of uses, as was intended by the developers.
 
 \subsection{Vulnerabilities}
 \subsubsection{Improvements}
-\emph{I2P} might have achieved some of its goals in improving \emph{Onion Routing}, but not all of them, and introduced some new ones.
+\emph{I2P} might have achieved some of its goals in improving \emph{Onion Routing}, but some existing problems remain unsolved and new issues have been introduced. 
 \\
 For example, by using \emph{cloves} instead of \emph{cells}, \emph{end--to--end correlation attacks} were mitigated, as each \emph{cell} inside of a \emph{clove} can have its own delay.
 \\
 By using a \emph{DHT} for routing information, the network was decentralized and therefore made more robust\cite{zantout2011}.
 
 \subsubsection{Denial of Service}
-Unfortunately for the network, there are still other types of DoS attacks to be performed.
+Unfortunately for the network, there are still other types of DoS attacks that may occur.
 \\
 For example, a \emph{starvation attack} could be performed, during which the attacker lets a big number of malicious nodes join the network and drop packets after establishing a connection.
 Participating with a lot of malicious nodes is considered a classic attack on anonymization networks and is called \emph{sybil attack}.
@@ -325,13 +325,13 @@ Considering that the \emph{I2P} network is much smaller than \emph{Tor}, resourc
 \subsubsection{Deanonymization of users}
 In \cite{egger2013}, an attack that combined several steps was performed to obtain the IP of clients with a high probability (about 80\%).
 \\
-The first step was to take over most of the \emph{netDB} by replacing the active nodes one by one.
-As the number is regulated by the network and usually the participation is automatic, a malicious node with activated participation can be started up while DoSing an actual node.
-At some point it will drop its participation for performance reasons, and assuming the amount of needed \emph{DHT} nodes did not increase, the node was successfully replaced by a malicious one.
+The first step is to take over most of the \emph{netDB} by replacing the active nodes one by one.
+As the number is regulated by the network and usually the participation is automatic, a malicious node with activated participation can be started up while DoSing a regular node.
+At some point it will drop its participation for performance reasons, and assuming the amount of needed \emph{DHT} nodes did not increase, the node would be successfully replaced by a malicious one.
 \\
-The second step is a classical \emph{Sybil} attack as described before to have many nodes in the topographical viscinity of the victim.
+The second step is a classic \emph{Sybil} attack as described before, in order to have many nodes in the topographical viscinity of the victim.
 \\
-Now there is a high probability that any kind of interaction the victim has with the network will be with one of the nodes, some of which are participating in the \emph{DHT}.
+Now there is a high probability that any kind of interaction the victim has with the network will be with one of the malicious nodes, some of which are participating in the \emph{DHT}.
 This together with the fact that storing to the \emph{DHT} is done in the clear can be then used to link the target and the observed IP.
 
 \subsubsection{Information disclosure through users}
