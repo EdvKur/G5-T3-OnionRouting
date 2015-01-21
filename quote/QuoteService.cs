@@ -11,6 +11,7 @@ namespace OnionRouting
 	public class QuoteService : OnionService
     {
 		const int DEFAULT_PORT = 8000;
+        //TODO: port, url and file location in config file
 
 		private string[] _quotes;
 		private Random   _rng    = new Random();
@@ -19,7 +20,17 @@ namespace OnionRouting
 			: base(port)
 		{
 			if (quotes == null)
-				quotes = File.ReadAllLines("quotes.txt");
+                try
+                {
+                    quotes = File.ReadAllLines("quotes.txt");
+                }
+                catch (FileNotFoundException e)
+                {
+                    Console.WriteLine("quotes.txt was not found!");
+                    Console.WriteLine("Press enter to exit...");
+                    Console.ReadLine();
+                    System.Environment.Exit(1);
+                }
 
 			List<string> nonEmptyLines = new List<string>();
 			foreach (string line in quotes)
@@ -58,9 +69,10 @@ namespace OnionRouting
 			byte[] buffer = Encoding.UTF8.GetBytes(quote);
 			response.ContentLength64 = buffer.Length;
 			response.OutputStream.Write(buffer, 0, buffer.Length);
-			response.Close();
 
-			Log.info("handling incoming quote request from {0}", context.Request.RemoteEndPoint);
+            Log.info("handling incoming quote request from {0}, responded '{1}'", context.Request.RemoteEndPoint, quote);
+
+			response.Close();
 		}
 
 		private string getRandomQuote()
