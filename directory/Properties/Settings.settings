@@ -38,5 +38,8 @@
     <Setting Name="securityGroup" Type="System.String" Scope="Application">
       <Value Profile="(Default)">sg-68ff1601</Value>
     </Setting>
+    <Setting Name="credentialsProfile" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">default</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -14,6 +14,7 @@ namespace OnionRouting
 {
     class AWSHelper
     {
+        string credentialProfile;
         string credentialLocation;
 //		const string CREDENTIAL_LOCATION = "/home/sunflare/.aws/credentials";
         string chainNodeImageId;
@@ -40,9 +41,17 @@ namespace OnionRouting
         
 		private AWSHelper()
         {
+            credentialProfile = Properties.Settings.Default.credentialsProfile;
+            credentialLocation = Properties.Settings.Default.credentialLocation;
+            chainNodeImageId = Properties.Settings.Default.chainNodeImageId;
+            chainNodeTag = Properties.Settings.Default.chainNodeTag;
+            instanceType = Properties.Settings.Default.instanceType;
+            keyPairName = Properties.Settings.Default.keyPairName;
+            securityGroup = Properties.Settings.Default.securityGroup;
+
             try
             {
-                StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials("default", credentialLocation);
+                StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials(credentialProfile, credentialLocation);
                 client = new AmazonEC2Client(credentials, Amazon.RegionEndpoint.EUCentral1);
             }
             catch (ArgumentException e)
@@ -53,13 +62,6 @@ namespace OnionRouting
                 Console.ReadLine();
                 System.Environment.Exit(1);
             }
-
-            credentialLocation = Properties.Settings.Default.credentialLocation;
-            chainNodeImageId = Properties.Settings.Default.chainNodeImageId;
-            chainNodeTag = Properties.Settings.Default.chainNodeTag;
-            instanceType = Properties.Settings.Default.instanceType;
-            keyPairName = Properties.Settings.Default.keyPairName;
-            securityGroup = Properties.Settings.Default.securityGroup;
             
         }
         
