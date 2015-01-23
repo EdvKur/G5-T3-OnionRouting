@@ -42,7 +42,7 @@ namespace OnionRouting
         {
             try
             {
-                StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials("default", credentialLocation);
+                StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials("default");
                 client = new AmazonEC2Client(credentials, Amazon.RegionEndpoint.EUCentral1);
             }
             catch (ArgumentException e)

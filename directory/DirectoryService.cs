@@ -84,7 +84,7 @@ namespace OnionRouting
 				return;
 			}
 
-			Log.info("handing incoming chain request from {0}", context.Request.RemoteEndPoint);
+			Log.info("handling incoming chain request from {0}", context.Request.RemoteEndPoint);
 
 			StringBuilder responseData = new StringBuilder();
 
@@ -94,12 +94,16 @@ namespace OnionRouting
 				response.StatusCode = Messaging.HTTP_SERVICE_UNAVAILABLE;
 				responseData.AppendLine("Not enough chain nodes available!");
 			}
-			else
+            else 
+            {
+                Log.info("Chain consists of:");
 				foreach (var chainNode in chain)
 				{
+                    Log.info("ID: {0}, IP: {1}, region: {2}, url: {3}", chainNode.InstanceId, chainNode.IP, chainNode.Region, chainNode.Url);
 					responseData.AppendLine(chainNode.Url + "/route");
 					responseData.AppendLine(chainNode.PublicKeyXml);
 				}
+            }
 
 			byte[] buffer = Encoding.UTF8.GetBytes(responseData.ToString());
 
