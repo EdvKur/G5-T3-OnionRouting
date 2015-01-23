@@ -28,7 +28,18 @@ namespace OnionRouting
 			if (running)
 				return;
 
-			listener = createListener();
+            try
+            {
+                listener = createListener();
+            }
+            catch (HttpListenerException e)
+            {
+                Log.error("Could not bind to specified port {0}", port);
+                Console.WriteLine("Press enter to exit...");
+                Console.ReadLine();
+                System.Environment.Exit(1);
+            }
+
 			running = true;
 			serviceThread = new Thread(run);
 			serviceThread.Start();
