@@ -79,7 +79,7 @@ namespace OnionRouting.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("C:\\\\credentials\\\\credentials")]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\credentials")]
         public string credentialLocation {
             get {
                 return ((string)(this["credentialLocation"]));
