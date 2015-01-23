@@ -8,7 +8,8 @@ namespace OnionRouting
 {
 	public class DirectoryService : OnionService
     {
-		const int DEFAULT_PORT = 8000;
+		static int defaultPort;
+        static string url;
 
 		private ChainNodeManager chainNodeManager = null;
 
@@ -26,7 +27,13 @@ namespace OnionRouting
 			}
 		}
 
-		public DirectoryService(int port = DEFAULT_PORT)
+        static DirectoryService()
+        {
+            defaultPort = Properties.Settings.Default.defaultPort;
+            url = Properties.Settings.Default.url;
+        }
+
+		public DirectoryService(int port)
 			: base(port)
 		{
 			AutoStartChainNodes = false;
@@ -56,7 +63,7 @@ namespace OnionRouting
 
 		protected override HttpListener createListener()
 		{
-			return Messaging.createListener(port, false, "chain");
+			return Messaging.createListener(port, false, url);
 		}
 
 		protected override void onStart()
@@ -109,12 +116,12 @@ namespace OnionRouting
 
         static void Main(string[] args)
         {
-			int port = DEFAULT_PORT;
+			int port = defaultPort;
 			if (args.Length >= 1)
 			{
 				bool success = int.TryParse(args[0], out port);
 				if (!success)
-					port = DEFAULT_PORT;
+					port = defaultPort;
 			}
 			DirectoryService directoryService = new DirectoryService(port);
 			directoryService.AutoStartChainNodes = true;

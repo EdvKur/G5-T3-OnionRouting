@@ -14,13 +14,13 @@ namespace OnionRouting
 {
     class AWSHelper
     {
-        const string CREDENTIAL_LOCATION = "C:\\credentials\\credentials";
+        string credentialLocation;
 //		const string CREDENTIAL_LOCATION = "/home/sunflare/.aws/credentials";
-        const string CHAIN_NODE_IMAGE_ID = "ami-3005342d";
-        const string CHAIN_NODE_TAG = "G5-T3-ChainNode";
-        const string INSTANCE_TYPE = "t2.micro";
-        const string KEY_PAIR_NAME = "G5-T3-Keypair";
-        const string SECURITY_GROUP = "sg-68ff1601";
+        string chainNodeImageId;
+        string chainNodeTag;
+        string instanceType;
+        string keyPairName;
+        string securityGroup;
 
 		private static AWSHelper singletonInstance = null;
 		private static Object creationMutex = new Object();
@@ -40,8 +40,27 @@ namespace OnionRouting
         
 		private AWSHelper()
         {
-			StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials("default", CREDENTIAL_LOCATION);
-            client = new AmazonEC2Client(credentials, Amazon.RegionEndpoint.EUCentral1);
+            try
+            {
+                StoredProfileAWSCredentials credentials = new StoredProfileAWSCredentials("default", credentialLocation);
+                client = new AmazonEC2Client(credentials, Amazon.RegionEndpoint.EUCentral1);
+            }
+            catch (ArgumentException e)
+            {
+        
+                Log.error("Could not find the credentials at the specified location: {0}", credentialLocation);
+                Console.WriteLine("Press enter to exit...");
+                Console.ReadLine();
+                System.Environment.Exit(1);
+            }
+
+            credentialLocation = Properties.Settings.Default.credentialLocation;
+            chainNodeImageId = Properties.Settings.Default.chainNodeImageId;
+            chainNodeTag = Properties.Settings.Default.chainNodeTag;
+            instanceType = Properties.Settings.Default.instanceType;
+            keyPairName = Properties.Settings.Default.keyPairName;
+            securityGroup = Properties.Settings.Default.securityGroup;
+            
         }
         
         public List<ChainNodeInfo> discoverChainNodes()
@@ -55,7 +74,7 @@ namespace OnionRouting
                 foreach (Instance instance in reservation.Instances)
                 {
                     // Amazon region, node name, DNS and IP information
-                    if (instance.State.Name == "running" && instance.Tags.Count > 0 && instance.Tags[0].Value == CHAIN_NODE_TAG)
+                    if (instance.State.Name == "running" && instance.Tags.Count > 0 && instance.Tags[0].Value == chainNodeTag)
                     {
                         runningChainNodes.Add(new ChainNodeInfo(
                                 instance.InstanceId,
@@ -88,12 +107,12 @@ namespace OnionRouting
         public ChainNodeInfo launchNewChainNodeInstance()
         {
 			RunInstancesRequest request = new RunInstancesRequest() {
-				ImageId = CHAIN_NODE_IMAGE_ID,
-				InstanceType = INSTANCE_TYPE,
+				ImageId = chainNodeImageId,
+				InstanceType = instanceType,
 				MinCount = 1,
 				MaxCount = 1,
-				KeyName = KEY_PAIR_NAME,
-				SecurityGroupIds = new List<string>() { SECURITY_GROUP }
+				KeyName = keyPairName,
+				SecurityGroupIds = new List<string>() { securityGroup }
             };
 
 			List<string> instanceIds = new List<string>();
@@ -102,7 +121,7 @@ namespace OnionRouting
             
 			var createTagRequest = new CreateTagsRequest();
             createTagRequest.Resources.Add(instance.InstanceId);
-            createTagRequest.Tags.Add(new Tag { Key = "Name", Value = CHAIN_NODE_TAG });
+            createTagRequest.Tags.Add(new Tag { Key = "Name", Value = chainNodeTag});
 			client.CreateTags(createTagRequest);
 
             return new ChainNodeInfo(

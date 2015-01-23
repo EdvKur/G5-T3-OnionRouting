@@ -15,10 +15,10 @@ namespace OnionRouting
 	/// </summary>
 	public class ChainNodeManager
 	{
-		const int CHAIN_LENGTH = 3;
-		const int TARGET_CHAIN_NODE_COUNT = 6;
-		const int ALIVE_CHECK_INTERVAL = 5000;
-		const int ALIVE_CHECK_TIMEOUT = 4000;
+		private int chainLength;
+		private int targetChainNodeCount;
+		private int aliveCheckInterval;
+		private int aliveCheckTimeout;
 
 		public bool AutoStartChainNodes { get; set; }
 		private bool running = false;
@@ -38,16 +38,21 @@ namespace OnionRouting
 		public ChainNodeManager()
 		{
 			AutoStartChainNodes = false;
+
+            chainLength = Properties.Settings.Default.chainLength;
+            targetChainNodeCount = Properties.Settings.Default.targetChainNodeCount;
+            aliveCheckInterval = Properties.Settings.Default.aliveCheckInterval;
+            aliveCheckTimeout = Properties.Settings.Default.aliveCheckTimeout;
 		}
 
 		public IEnumerable<ChainNodeInfo> getRandomChain()
 		{
 			lock (readyChainNodes)
 			{
-				if (readyChainNodes.Count < CHAIN_LENGTH)
+				if (readyChainNodes.Count < chainLength)
 					return null;
 
-				return readyChainNodes.OrderBy(x => rng.Next()).Take(CHAIN_LENGTH);
+				return readyChainNodes.OrderBy(x => rng.Next()).Take(chainLength);
 			}
 		}
 
@@ -124,7 +129,7 @@ namespace OnionRouting
 				}
 
 				// wait until all tasks have completed or the timeout has been reached.
-				Task.WaitAll(tasks, ALIVE_CHECK_TIMEOUT);
+				Task.WaitAll(tasks, aliveCheckTimeout);
 
 				int j = 0;
 				for (int i = 0; i < tasks.Length; i++)
@@ -158,7 +163,7 @@ namespace OnionRouting
 					lock (startingChainNodes)
 						try
 					{
-						while (readyChainNodes.Count + startingChainNodes.Count < TARGET_CHAIN_NODE_COUNT)
+						while (readyChainNodes.Count + startingChainNodes.Count < targetChainNodeCount)
 						{
 							startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
 							Log.info("started new chain node instance");
@@ -171,7 +176,7 @@ namespace OnionRouting
 
 				// wait until our interval has passed or we are explicitly woken up to stop the thread
 				stopwatch.Stop();
-				int waitTime = ALIVE_CHECK_INTERVAL - (int)stopwatch.ElapsedMilliseconds;
+				int waitTime = aliveCheckInterval - (int)stopwatch.ElapsedMilliseconds;
 				if (waitTime > 0)
 					stopThreadsEvent.WaitOne(waitTime);
 			}
@@ -238,7 +243,7 @@ namespace OnionRouting
 
 				// wait until our interval has passed or we are explicitly woken up to stop the thread
 				stopwatch.Stop();
-				int waitTime = ALIVE_CHECK_INTERVAL - (int)stopwatch.ElapsedMilliseconds;
+				int waitTime = aliveCheckInterval - (int)stopwatch.ElapsedMilliseconds;
 				if (waitTime > 0)
 					stopThreadsEvent.WaitOne(waitTime);
 			}
