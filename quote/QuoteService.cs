@@ -31,11 +31,11 @@ namespace OnionRouting
 			if (quotes == null)
                 try
                 {
-                    quotes = File.ReadAllLines("quotes.txt");
+                    quotes = File.ReadAllLines(quoteFileLocation);
                 }
                 catch (FileNotFoundException e)
                 {
-                    Log.error("quotes.txt was not found!");
+                    Log.error("Quotefile was not found under the specified path: {0}", quoteFileLocation);
                     Console.WriteLine("Press enter to exit...");
                     Console.ReadLine();
                     System.Environment.Exit(1);
@@ -53,7 +53,7 @@ namespace OnionRouting
 
 		protected override HttpListener createListener()
 		{
-			return Messaging.createListener(port, false, "quote");
+			return Messaging.createListener(port, false, url);
 		}
 
 		protected override void onStart()
