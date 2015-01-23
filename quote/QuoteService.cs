@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -10,13 +11,21 @@ namespace OnionRouting
 {
 	public class QuoteService : OnionService
     {
-		const int DEFAULT_PORT = 8000;
-        //TODO: port, url and file location in config file
+		static int defaultPort;
+        static string quoteFileLocation;
+        static string url;
 
 		private string[] _quotes;
 		private Random   _rng    = new Random();
 
-		public QuoteService(int port = DEFAULT_PORT, string[] quotes = null)
+        static QuoteService()
+        {
+            defaultPort = Properties.Settings.Default.defaultPort;
+            quoteFileLocation = Properties.Settings.Default.quoteFileLocation;
+            url = Properties.Settings.Default.url;
+        }
+
+		public QuoteService(int port, string[] quotes = null)
 			: base(port)
 		{
 			if (quotes == null)
@@ -26,7 +35,7 @@ namespace OnionRouting
                 }
                 catch (FileNotFoundException e)
                 {
-                    Console.WriteLine("quotes.txt was not found!");
+                    Log.error("quotes.txt was not found!");
                     Console.WriteLine("Press enter to exit...");
                     Console.ReadLine();
                     System.Environment.Exit(1);
@@ -82,12 +91,12 @@ namespace OnionRouting
 
 		static void Main(string[] args)
 		{
-			int port = DEFAULT_PORT;
+			int port = defaultPort;
 			if (args.Length >= 1)
 			{
 				bool success = int.TryParse(args[0], out port);
 				if (!success)
-					port = DEFAULT_PORT;
+					port = defaultPort;
 			}
 			QuoteService quoteService = new QuoteService(port);
 			quoteService.start();
