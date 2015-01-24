@@ -10,6 +10,9 @@ namespace OnionRouting
 	{
 		private const string ONLINE = "online";
 
+        string statusUrl;
+        string keyUrl;
+
 		private RSAKeyPair rsaKeys;
 		private HttpListenerContext context;
 		private bool started = false;
@@ -18,6 +21,9 @@ namespace OnionRouting
 		{
 			this.rsaKeys = rsaKeys;
 			this.context = context;
+
+            statusUrl = Properties.Settings.Default.statusUrl;
+            keyUrl = Properties.Settings.Default.keyUrl;
 		}
 
 		public void start()
@@ -31,9 +37,9 @@ namespace OnionRouting
 
 		private void run()
 		{
-			if (context.Request.Url.AbsolutePath == "/status")
+			if (context.Request.Url.AbsolutePath == "/" + statusUrl)
 				handleStatusRequest();
-			else if (context.Request.Url.AbsolutePath == "/key")
+			else if (context.Request.Url.AbsolutePath == "/" + keyUrl)
 				handleKeyRequest();
 			else
 				handleRouteRequest();

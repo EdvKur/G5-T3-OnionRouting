@@ -1,0 +1,18 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OnionRouting.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="defaultPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">8000</Value>
+    </Setting>
+    <Setting Name="statusUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">status</Value>
+    </Setting>
+    <Setting Name="keyUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">key</Value>
+    </Setting>
+    <Setting Name="routeUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">route</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

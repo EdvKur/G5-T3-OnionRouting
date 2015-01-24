@@ -12,13 +12,25 @@ namespace OnionRouting
 {
 	public class ChainService : OnionService
     {
-		const int DEFAULT_PORT = 8000;
+		static int defaultPort;
+
+        string statusUrl;
+        string keyUrl;
+        string routeUrl;
 
 		private RSAKeyPair _rsaKeys;
 
-		public ChainService(int port = DEFAULT_PORT)
+        static ChainService()
+        {
+            defaultPort = Properties.Settings.Default.defaultPort;
+        }
+
+		public ChainService(int port)
 			: base(port)
 		{
+            statusUrl = Properties.Settings.Default.statusUrl;
+            keyUrl = Properties.Settings.Default.keyUrl;
+            routeUrl = Properties.Settings.Default.routeUrl;
 		}
 
 		protected override HttpListener createListener()
@@ -40,12 +52,12 @@ namespace OnionRouting
 
         static void Main(string[] args)
         {
-			int port = DEFAULT_PORT;
+			int port = defaultPort;
 			if (args.Length >= 1)
 			{
 				bool success = int.TryParse(args[0], out port);
 				if (!success)
-					port = DEFAULT_PORT;
+					port = defaultPort;
 			}
 			ChainService chainService = new ChainService(port);
 			chainService.start();
