@@ -37,6 +37,7 @@ namespace OnionRouting
 			// Quote Service
 			quoteService = new QuoteService(++currentPort, new string[1] { TEST_QUOTE });
 			quoteService.start();
+            Log.info("quote service started");
 
 			// Chain Services
 			chainNodeInfos = new ChainNodeInfo[CHAIN_NODES_COUNT];
@@ -50,12 +51,14 @@ namespace OnionRouting
 
 				chainServices[i] = new ChainService(nodePort);
 				chainServices[i].start();
+                Log.info("chain node #{0} at port {1} started", i, currentPort);
 			}
 
 			// Directory Service
 			directoryService = new DirectoryService(++currentPort);
-			directoryService.AutoStartChainNodes = false;
 			directoryService.start();
+            Log.info("directory service started");
+
 			foreach (ChainNodeInfo nodeInfo in chainNodeInfos)
 			{
 				directoryService.addManualChainNode(nodeInfo);
@@ -66,6 +69,7 @@ namespace OnionRouting
 			string quoteUrl = "http://localhost:" + quoteService.getPort() + "/quote";
 			originatorService = new OriginatorService(++currentPort, directoryUrl, quoteUrl);
 			originatorService.start();
+            Log.info("originator service started");
 		}
 
 		[TearDown]
@@ -113,6 +117,7 @@ namespace OnionRouting
 			}
 
 			List<ChainNodeInfo> chain = originatorService.requestChain();
+            Log.info("chain requested from directory node");
 			Assert.IsTrue(chain != null);
 			Assert.AreEqual(3, chain.Count);
 
