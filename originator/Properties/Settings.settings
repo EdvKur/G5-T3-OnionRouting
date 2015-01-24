@@ -1,0 +1,21 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OnionRouting.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="defaultPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">8000</Value>
+    </Setting>
+    <Setting Name="directoryServiceUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://54.93.89.11:8000/chain</Value>
+    </Setting>
+    <Setting Name="quoteServiceUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://54.93.192.53:8000/quote</Value>
+    </Setting>
+    <Setting Name="handleUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">handle</Value>
+    </Setting>
+    <Setting Name="uiUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">ui</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

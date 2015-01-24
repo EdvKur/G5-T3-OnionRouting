@@ -12,19 +12,25 @@ namespace OnionRouting
 {
 	public class OriginatorService : OnionService
     {
-		const int DEFAULT_PORT = 8000;
-		const string DEFAULT_DIRECTORY_SERVICE_URL = "http://54.93.191.79:8000/chain";
-		const string DEFAULT_QUOTE_SERVICE_URL = "http://54.93.192.53:8000/quote";
-        
-		string directoryServiceUrl;
-		string quoteServiceUrl;
+		static int defaultPort;        
+		static string directoryServiceUrl;
+		static string quoteServiceUrl;
+        static string handleUrl;
+        static string uiUrl;
+
+        static OriginatorService()
+        {
+            defaultPort = Properties.Settings.Default.defaultPort;
+            directoryServiceUrl = Properties.Settings.Default.directoryServiceUrl;
+            quoteServiceUrl = Properties.Settings.Default.quoteServiceUrl;
+            handleUrl = Properties.Settings.Default.handleUrl;
+            uiUrl = Properties.Settings.Default.uiUrl;
+        }
                 
-		public OriginatorService(int port = DEFAULT_PORT, string directoryUrl = DEFAULT_DIRECTORY_SERVICE_URL,
-			string quoteUrl = DEFAULT_QUOTE_SERVICE_URL)
+		public OriginatorService(int port)
 			: base(port)
 		{
-			directoryServiceUrl = directoryUrl;
-			quoteServiceUrl = quoteUrl;
+
 		}
 
 		public List<ChainNodeInfo> requestChain()
@@ -101,7 +107,7 @@ namespace OnionRouting
 
 		protected override HttpListener createListener()
 		{
-			return Messaging.createListener(port, true, "handle", "ui");
+			return Messaging.createListener(port, true, handleUrl, uiUrl);
 		}
 
 		protected override void onStart()
@@ -123,13 +129,13 @@ namespace OnionRouting
 
 			byte[] buffer = null;
 
-			if (context.Request.Url.AbsolutePath == "/ui")
+			if (context.Request.Url.AbsolutePath == "/" + uiUrl)
 			{
 				buffer = File.ReadAllBytes("web.html");
 				response.ContentType = "text/html";
 			}
 
-			else if (context.Request.Url.AbsolutePath == "/handle")
+			else if (context.Request.Url.AbsolutePath == "/" + handleUrl)
 			{
 				bool success = true;
 				string quote;
@@ -171,12 +177,12 @@ namespace OnionRouting
 
 		static void Main(string[] args)
 		{
-			int port = DEFAULT_PORT;
+			int port = defaultPort;
 			if (args.Length >= 1)
 			{
 				bool success = int.TryParse(args[0], out port);
 				if (!success)
-					port = DEFAULT_PORT;
+					port = defaultPort;
 			}
 
 			OriginatorService originatorService = new OriginatorService(port);
