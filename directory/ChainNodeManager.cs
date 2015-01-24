@@ -154,28 +154,24 @@ namespace OnionRouting
                     Log.info("status of all {0} ready chain nodes checked", readyChainNodes.Count);
                 }
 
-                if (readyChainNodes.Count + startingChainNodes.Count + runningChainNodes.Count < targetChainNodeCount)
+                if (autoStartChainNodes)
                 {
-
-                    if (autoStartChainNodes)
+                    lock (DirectoryService.lockObj)
                     {
-                        lock (DirectoryService.lockObj)
-                        {
-                            AWSHelper awsHelper = AWSHelper.instance();
+                        AWSHelper awsHelper = AWSHelper.instance();
 
-                            // start new chain node instances if there are not 6 available/starting
-                            try
+                        // start new chain node instances if there are not 6 available/starting
+                        try
+                        {
+                            while (readyChainNodes.Count + startingChainNodes.Count + runningChainNodes.Count < targetChainNodeCount)
                             {
-                                while (readyChainNodes.Count + startingChainNodes.Count + runningChainNodes.Count < targetChainNodeCount)
-                                {
-                                    startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
-                                    Log.info("started chain node instance #{0}", startingChainNodes.Count);
-                                }
+                                startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
+                                Log.info("started chain node instance #{0}", startingChainNodes.Count);
                             }
-                            catch
-                            {
-                                Log.error("failed to start new chain node instance (AWS instance limit)");
-                            }
+                        }
+                        catch
+                        {
+                            Log.error("failed to start new chain node instance (AWS instance limit)");
                         }
                     }
                 }
