@@ -190,13 +190,14 @@
 		});
         function sendRequest(){
            $j.ajax({
-                type: "POST",
+                type: "GET",
                 url: "http://localhost:8000/handle",
             })
         .success(function (ret) {
 			var res = ret.replace(/\</g,"&lt;");
-			res = res.replace(/\>/g,"&gt;")  
-			res = res.split("\r\n"); 
+			res = res.replace(/\>/g,"&gt;");
+			res = res.replace("\r","");
+			res = res.split("\n"); 
 			$j("#results").show();
 			$j("#response0").show();
 			$j("#response0").html(res[0]);
