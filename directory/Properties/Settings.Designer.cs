@@ -139,5 +139,14 @@ namespace OnionRouting.Properties {
                 return ((string)(this["credentialsProfile"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool autoStartChainNodes {
+            get {
+                return ((bool)(this["autoStartChainNodes"]));
+            }
+        }
     }
 }

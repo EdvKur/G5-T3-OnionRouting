@@ -67,27 +67,42 @@ namespace OnionRouting
         
         public List<ChainNodeInfo> discoverChainNodes()
         {
-            List<ChainNodeInfo> runningChainNodes = new List<ChainNodeInfo>();
+            lock (DirectoryService.lockObj)
+            {
+                List<ChainNodeInfo> runningChainNodes = new List<ChainNodeInfo>();
 
-            DescribeInstancesRequest ec2Request = new DescribeInstancesRequest();
-            DescribeInstancesResponse ec2Response = client.DescribeInstances(ec2Request);
-
-            foreach (Reservation reservation in ec2Response.Reservations)
-                foreach (Instance instance in reservation.Instances)
+                DescribeInstancesRequest ec2Request = new DescribeInstancesRequest();
+                DescribeInstancesResponse ec2Response = null;
+                try
                 {
-                    // Amazon region, node name, DNS and IP information
-                    if (instance.State.Name == "running" && instance.Tags.Count > 0 && instance.Tags[0].Value == chainNodeTag)
-                    {
-                        runningChainNodes.Add(new ChainNodeInfo(
-                                instance.InstanceId,
-                                instance.PublicIpAddress,
-                                instance.PublicDnsName,
-                                instance.Placement.AvailabilityZone
-                            ));
-                    }
+                    ec2Response = client.DescribeInstances(ec2Request);
+                }
+                catch (AmazonEC2Exception e)
+                {
+                    Log.error(e.Message);
+                    Console.WriteLine("Press enter to exit...");
+                    Console.ReadLine();
+                    System.Environment.Exit(1);
                 }
 
-            return runningChainNodes;
+                foreach (Reservation reservation in ec2Response.Reservations)
+                    foreach (Instance instance in reservation.Instances)
+                    {
+                        // Amazon region, node name, DNS and IP information
+                        if (instance.State.Name == "running" && instance.Tags.Count > 0 && instance.Tags[0].Value == chainNodeTag)
+                        {
+                            Log.info("New chain node found: {0} at {1}", instance.InstanceId, instance.PublicIpAddress);
+                            runningChainNodes.Add(new ChainNodeInfo(
+                                    instance.InstanceId,
+                                    instance.PublicIpAddress,
+                                    instance.PublicDnsName,
+                                    instance.Placement.AvailabilityZone
+                                ));
+                        }
+                    }
+
+                return runningChainNodes;
+            }
         }
 
         public string checkChainNodeState(ChainNodeInfo chainNode)

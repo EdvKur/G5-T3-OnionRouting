@@ -10,22 +10,9 @@ namespace OnionRouting
     {
 		static int defaultPort;
         static string url;
+        public static Object lockObj = new Object();
 
-		private ChainNodeManager chainNodeManager = null;
-
-		private bool autoStartChainNodes = false;
-
-		public bool AutoStartChainNodes
-		{
-			get {
-				return autoStartChainNodes;
-			}
-			set {
-				autoStartChainNodes = AutoStartChainNodes;
-				if (chainNodeManager != null)
-					chainNodeManager.AutoStartChainNodes = AutoStartChainNodes;
-			}
-		}
+		private ChainNodeManager chainNodeManager;
 
         static DirectoryService()
         {
@@ -36,21 +23,17 @@ namespace OnionRouting
 		public DirectoryService(int port)
 			: base(port)
 		{
-			AutoStartChainNodes = false;
-			chainNodeManager = new ChainNodeManager();
-			chainNodeManager.AutoStartChainNodes = AutoStartChainNodes;
+            chainNodeManager = new ChainNodeManager();
 		}
 
 		public void discoverChainNodes()
 		{
-			if (chainNodeManager != null)
-				chainNodeManager.discoverChainNodes();
+			chainNodeManager.discoverChainNodes();
 		}
 
 		public void addManualChainNode(ChainNodeInfo node)
 		{
-			if (chainNodeManager != null)
-				chainNodeManager.addManualChainNode(node);
+			chainNodeManager.addManualChainNode(node);
 		}
 
 		public int countReadyNodes()
@@ -128,10 +111,8 @@ namespace OnionRouting
 					port = defaultPort;
 			}
 			DirectoryService directoryService = new DirectoryService(port);
-			directoryService.AutoStartChainNodes = true;
-//			directoryService.AutoStartChainNodes = false;
+            directoryService.discoverChainNodes();
 			directoryService.start();
-			directoryService.discoverChainNodes();
 			directoryService.wait();
         }
 

@@ -20,7 +20,7 @@ namespace OnionRouting
 		private int aliveCheckInterval;
 		private int aliveCheckTimeout;
 
-		public bool AutoStartChainNodes { get; set; }
+        private bool autoStartChainNodes;
 		private bool running = false;
 
 		// After the start command has been sent to EC2, the node is considered "starting".
@@ -37,7 +37,7 @@ namespace OnionRouting
 
 		public ChainNodeManager()
 		{
-			AutoStartChainNodes = false;
+            autoStartChainNodes = Properties.Settings.Default.autoStartChainNodes;
 
             chainLength = Properties.Settings.Default.chainLength;
             targetChainNodeCount = Properties.Settings.Default.targetChainNodeCount;
@@ -60,7 +60,7 @@ namespace OnionRouting
 		{
 			Log.info("discovering running chain nodes");
 			AWSHelper awsHelper = AWSHelper.instance();
-			lock (startingChainNodes)
+			//lock (startingChainNodes)
 				startingChainNodes.AddRange(awsHelper.discoverChainNodes());
 		}
 
@@ -115,63 +115,65 @@ namespace OnionRouting
 		{
 			while (running)
 			{
-				Stopwatch stopwatch = Stopwatch.StartNew();
+                Stopwatch stopwatch = Stopwatch.StartNew();
 
-				Task<WebResponse>[] tasks;
-				lock (readyChainNodes)
+                lock (DirectoryService.lockObj)
+                {
+                
+                    Task<WebResponse>[] tasks;
+                    {
+                        tasks = new Task<WebResponse>[readyChainNodes.Count];
+
+                        for (int i = 0; i < readyChainNodes.Count; i++)
+                        {
+                            tasks[i] = HttpWebRequest.CreateHttp(readyChainNodes[i].Url + "/status").GetResponseAsync();
+                        }
+                    }
+
+                    // wait until all tasks have completed or the timeout has been reached.
+                    Task.WaitAll(tasks, aliveCheckTimeout);
+
+                    int j = 0;
+                    for (int i = 0; i < tasks.Length; i++)
+                    {
+                        if (tasks[i].IsCompleted)
+                        {
+                            tasks[i].Result.Close();
+                            tasks[i].Dispose();
+                        }
+                        else
+                        {
+                            Log.info("chain node at {0} gone offline!", readyChainNodes[j].Url.Substring(7));
+                            readyChainNodes.RemoveAt(j);
+                            j--;
+                        }
+
+                        j++;
+                    }
+
+                    Log.info("status of all {0} ready chain nodes checked", readyChainNodes.Count);
+                }
+
+				if (autoStartChainNodes)
 				{
-					tasks = new Task<WebResponse>[readyChainNodes.Count];
+                    lock (DirectoryService.lockObj)
+                    {
+                        AWSHelper awsHelper = AWSHelper.instance();
 
-					for (int i = 0; i < readyChainNodes.Count; i++)
-					{
-						tasks[i] = HttpWebRequest.CreateHttp(readyChainNodes[i].Url + "/status").GetResponseAsync();
-					}
-				}
-
-				// wait until all tasks have completed or the timeout has been reached.
-				Task.WaitAll(tasks, aliveCheckTimeout);
-
-				int j = 0;
-				for (int i = 0; i < tasks.Length; i++)
-				{
-					if (tasks[i].IsCompleted)
-					{
-						tasks[i].Result.Close();
-						tasks[i].Dispose();
-					}
-					else
-					{
-						lock (readyChainNodes)
-						{
-							Log.info("chain node at {0} gone offline!", readyChainNodes[j].Url.Substring(7));
-							readyChainNodes.RemoveAt(j);
-							j--;
-						}
-					}
-
-					j++;
-				}
-
-				Log.info("status of all chain nodes checked");
-
-				if (AutoStartChainNodes)
-				{
-					AWSHelper awsHelper = AWSHelper.instance();
-
-					// start new chain node instances if there are not 6 available/starting
-					lock (readyChainNodes)
-					lock (startingChainNodes)
-						try
-					{
-						while (readyChainNodes.Count + startingChainNodes.Count < targetChainNodeCount)
-						{
-							startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
-							Log.info("started new chain node instance");
-						}
-					}
-					catch {
-						Log.error("failed to start new chain node instance (AWS instance limit)");
-					}
+                        // start new chain node instances if there are not 6 available/starting
+                        try
+                        {
+                            while (readyChainNodes.Count + startingChainNodes.Count + runningChainNodes.Count < targetChainNodeCount)
+                            {
+                                startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
+                                Log.info("started chain node instance #{0}", startingChainNodes.Count);
+                            }
+                        }
+                        catch
+                        {
+                            Log.error("failed to start new chain node instance (AWS instance limit)");
+                        }
+                    }
 				}
 
 				// wait until our interval has passed or we are explicitly woken up to stop the thread
@@ -191,55 +193,53 @@ namespace OnionRouting
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				// starting -> running
-				ChainNodeInfo[] startingNodes;
-				lock (startingChainNodes)
-					startingNodes = startingChainNodes.ToArray();
-//				Log.info("starting nodes: " + startingNodes.Length);
-				for (int i = 0; i < startingNodes.Length; i++)
-				{
-					if (awsHelper.checkChainNodeState(startingNodes[i]) == "running")
-					{
-						string url = "http://" + startingNodes[i].IP + ":" + startingNodes[i].port;
-						startingNodes[i].Url = url;
+				//ChainNodeInfo[] startingNodes;
+                //lock (startingChainNodes)
+                //{
+                    //startingNodes = startingChainNodes.ToArray();
+                    //				Log.info("starting nodes: " + startingNodes.Length);
+                lock (DirectoryService.lockObj)
+                {
+                    for (int i = 0; i < startingChainNodes.Count; i++)
+                    {
+                        if (awsHelper.checkChainNodeState(startingChainNodes[i]) == "running")
+                        {
+                            string url = "http://" + startingChainNodes[i].IP + ":" + startingChainNodes[i].port;
+                            startingChainNodes[i].Url = url;
 
-						lock (startingChainNodes)
-							startingChainNodes.Remove(startingNodes[i]);
+                            runningChainNodes.Add(startingChainNodes[i]);
+                            Log.info("chain node at " + startingChainNodes[i].IP + " running");
 
-						lock (runningChainNodes)
-							runningChainNodes.Add(startingNodes[i]);
+                            startingChainNodes.Remove(startingChainNodes[i]);
+                        }
+                    }
 
-						Log.info("chain node at " + startingNodes[i].IP + " running");
+                }
+            
+                // running -> ready
+                for (int i = 0; i < runningChainNodes.Count; i++)
+                {
+                    bool success;
+                    byte[] response = Messaging.sendRecv(runningChainNodes[i].Url + "/key", out success);
+                    if (success)
+                    {
+                        string xml = Encoding.UTF8.GetString(response);
+                        runningChainNodes[i].PublicKeyXml = xml;
 
-					}
-				}
+                        lock (DirectoryService.lockObj)
+                        {
+                            readyChainNodes.Add(runningChainNodes[i]);
+                            Log.info("chain node at " + runningChainNodes[i].IP + " ready");
 
-				// running -> ready
-				ChainNodeInfo[] runningNodes;
-				lock (runningChainNodes)
-					runningNodes = runningChainNodes.ToArray();
-//				Log.info("running nodes: " + runningNodes.Length);
-				for (int i = 0; i < runningNodes.Length; i++)
-				{
-//					Log.info("RUNNING NODE: " + i + ", " + runningNodes[i].Url);
-					bool success;
-					byte[] response = Messaging.sendRecv(runningNodes[i].Url + "/key", out success);
-					if (success)
-					{
-						string xml = Encoding.UTF8.GetString(response);
-						runningNodes[i].PublicKeyXml = xml;
-
-						lock (runningChainNodes)
-							runningChainNodes.Remove(runningNodes[i]);
-
-						lock (readyChainNodes)
-							readyChainNodes.Add(runningNodes[i]);
-
-						Log.info("chain node at " + runningNodes[i].IP + " ready");
-					} else
-					{
-						Log.info("no success :(");
-					}
-				}
+                            runningChainNodes.Remove(runningChainNodes[i]);
+                        }
+                    }
+                    else
+                    {
+                        Log.info("chain node at " + runningChainNodes[i].IP + " not yet ready");
+                    }
+                }
+                
 
 				// wait until our interval has passed or we are explicitly woken up to stop the thread
 				stopwatch.Stop();
