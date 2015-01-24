@@ -154,27 +154,31 @@ namespace OnionRouting
                     Log.info("status of all {0} ready chain nodes checked", readyChainNodes.Count);
                 }
 
-				if (autoStartChainNodes)
-				{
-                    lock (DirectoryService.lockObj)
-                    {
-                        AWSHelper awsHelper = AWSHelper.instance();
+                if (readyChainNodes.Count + startingChainNodes.Count + runningChainNodes.Count < targetChainNodeCount)
+                {
 
-                        // start new chain node instances if there are not 6 available/starting
-                        try
+                    if (autoStartChainNodes)
+                    {
+                        lock (DirectoryService.lockObj)
                         {
-                            while (readyChainNodes.Count + startingChainNodes.Count + runningChainNodes.Count < targetChainNodeCount)
+                            AWSHelper awsHelper = AWSHelper.instance();
+
+                            // start new chain node instances if there are not 6 available/starting
+                            try
                             {
-                                startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
-                                Log.info("started chain node instance #{0}", startingChainNodes.Count);
+                                while (readyChainNodes.Count + startingChainNodes.Count + runningChainNodes.Count < targetChainNodeCount)
+                                {
+                                    startingChainNodes.Add(awsHelper.launchNewChainNodeInstance());
+                                    Log.info("started chain node instance #{0}", startingChainNodes.Count);
+                                }
+                            }
+                            catch
+                            {
+                                Log.error("failed to start new chain node instance (AWS instance limit)");
                             }
                         }
-                        catch
-                        {
-                            Log.error("failed to start new chain node instance (AWS instance limit)");
-                        }
                     }
-				}
+                }
 
 				// wait until our interval has passed or we are explicitly woken up to stop the thread
 				stopwatch.Stop();

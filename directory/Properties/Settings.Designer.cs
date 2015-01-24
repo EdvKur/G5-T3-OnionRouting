@@ -88,7 +88,7 @@ namespace OnionRouting.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("ami-3005342d")]
+        [global::System.Configuration.DefaultSettingValueAttribute("ami-9226158f")]
         public string chainNodeImageId {
             get {
                 return ((string)(this["chainNodeImageId"]));
@@ -97,7 +97,7 @@ namespace OnionRouting.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("G5-T3-ChainNode")]
+        [global::System.Configuration.DefaultSettingValueAttribute("G5-T3-MonoChainNode")]
         public string chainNodeTag {
             get {
                 return ((string)(this["chainNodeTag"]));
@@ -142,7 +142,7 @@ namespace OnionRouting.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool autoStartChainNodes {
             get {
                 return ((bool)(this["autoStartChainNodes"]));

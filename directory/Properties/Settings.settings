@@ -24,10 +24,10 @@
       <Value Profile="(Default)">C:\credentials</Value>
     </Setting>
     <Setting Name="chainNodeImageId" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">ami-3005342d</Value>
+      <Value Profile="(Default)">ami-9226158f</Value>
     </Setting>
     <Setting Name="chainNodeTag" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">G5-T3-ChainNode</Value>
+      <Value Profile="(Default)">G5-T3-MonoChainNode</Value>
     </Setting>
     <Setting Name="instanceType" Type="System.String" Scope="Application">
       <Value Profile="(Default)">t2.micro</Value>
@@ -42,7 +42,7 @@
       <Value Profile="(Default)">default</Value>
     </Setting>
     <Setting Name="autoStartChainNodes" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>
