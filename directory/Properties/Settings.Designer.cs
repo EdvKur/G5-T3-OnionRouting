@@ -142,7 +142,7 @@ namespace OnionRouting.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool autoStartChainNodes {
             get {
                 return ((bool)(this["autoStartChainNodes"]));
