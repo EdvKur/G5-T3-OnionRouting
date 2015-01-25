@@ -62,16 +62,6 @@ namespace OnionRouting
 			ChainService chainService = new ChainService(port);
 			chainService.start();
 			chainService.wait();
-        }
-
-        //private static void parseArgs(string[] args)
-        //{
-        //    if (args.Length == 0 || !int.TryParse(args[0], out PORT) || PORT <= 0 || PORT > 65535)
-        //    {
-        //        Console.WriteLine("Error: valid port required!");
-        //        Console.WriteLine("Usage: chain port");
-        //        Environment.Exit(1);
-        //    }
-        //}              
+        }             
     }
 }

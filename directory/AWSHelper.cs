@@ -16,7 +16,6 @@ namespace OnionRouting
     {
         string credentialProfile;
         string credentialLocation;
-//		const string CREDENTIAL_LOCATION = "/home/sunflare/.aws/credentials";
         string chainNodeImageId;
         string chainNodeTag;
         string instanceType;

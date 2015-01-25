@@ -65,7 +65,6 @@ namespace OnionRouting
 
 			for (int i = 0; i < lines.Length; i += 2)
 			{
-				// TODO error handling (e.g. check if responce is valid)
 				chain.Add(new ChainNodeInfo() {
 					Url = lines[i],
 					PublicKey = Crypto.importKey(lines[i + 1])
@@ -213,8 +212,6 @@ namespace OnionRouting
 				string quote;
 				originatorService.requestQuote(out success, out quote);
 			}
-
-//			originatorService.stop();
 		}
     }
 }

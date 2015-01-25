@@ -117,28 +117,5 @@ namespace OnionRouting
 			directoryService.start();
 			directoryService.wait();
         }
-
-        //static void discoverChainNodes()
-        //{
-        //    Log.info("discovering chain nodes");
-
-        //    for (int i = 9000; i < 9006; i++)
-        //    {
-        //        bool success;
-        //        string url = "http://localhost:" + i;
-
-        //        byte[] response = Messaging.sendRecv(url + "/key", out success);
-
-        //        if (success)
-        //        {
-        //            string xml = Encoding.UTF8.GetString(response);
-        //            _runningChainNodes.Add(new ChainNodeData(url, xml));
-
-        //            Log.info("chain node at " + url.Substring(7) + " discovered");
-        //        }
-        //        else
-        //            Log.error("chain node at " + url.Substring(7) + " unavailable");
-        //    }
-        //}
     }
 }
