@@ -31,8 +31,6 @@ namespace OnionRouting
 		private List<ChainNodeInfo> readyChainNodes;
 		private Random rng;
 
-        private Dictionary<string, int> usage;
-
 		private ManualResetEvent stopThreadsEvent = new ManualResetEvent(false);
 		private Thread runningStatusThread = null;
 		private Thread newNodesThread = null;
@@ -81,7 +79,7 @@ namespace OnionRouting
                         if (minNodes.Count > chainLength) {
                             response.AddRange(minNodes.OrderBy(x => rng.Next()).Take(chainLength).ToList());
                         } else {
-                            response.AddRange(minNodes);
+                            response.AddRange(minNodes.Take(chainLength - response.Count));
                         }
 
                         minUsage++;
