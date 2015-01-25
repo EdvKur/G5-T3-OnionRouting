@@ -54,7 +54,7 @@ namespace OnionRouting
 
 		public IEnumerable<ChainNodeInfo> getChain(string strategy)
 		{
-			lock (readyChainNodes)
+			lock (DirectoryService.lockObj)
 			{
                 if (readyChainNodes.Count < chainLength)
                 {
