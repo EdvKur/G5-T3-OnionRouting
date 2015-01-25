@@ -52,22 +52,25 @@ namespace OnionRouting
 
 		public IEnumerable<ChainNodeInfo> getChain(string strategy)
 		{
-			lock (DirectoryService.lockObj)
-			{
-                if (readyChainNodes.Count < chainLength)
-                {
-                    return null;
-                } else if (strategy == "random")
+            if (readyChainNodes.Count < chainLength)
+            {
+                return null;
+            } else if (strategy == "random")
+            {
+                lock (DirectoryService.lockObj)
                 {
                     return readyChainNodes.OrderBy(x => rng.Next()).Take(chainLength);
-                } else if (strategy == "balanced")
+                }
+            } else if (strategy == "balanced")
+            {
+                lock (DirectoryService.lockObj)
                 {
                     var minUsage = readyChainNodes.OrderBy(x => x.usageCount).First().usageCount;
                     Log.info("minimum # of usages: {0}", minUsage);
                     List<ChainNodeInfo> response = new List<ChainNodeInfo>();
 
                     while (response.Count < chainLength)
-                    {    
+                    {
                         var minNodes = readyChainNodes.FindAll(
                             delegate(ChainNodeInfo info)
                             {
@@ -76,27 +79,31 @@ namespace OnionRouting
                             );
 
                         Log.info("minUsage = {0}, minNodes.Count = {1}", minUsage, minNodes.Count);
-                        if (minNodes.Count > chainLength) {
+                        if (minNodes.Count > chainLength)
+                        {
                             response.AddRange(minNodes.OrderBy(x => rng.Next()).Take(chainLength - response.Count).ToList());
-                        } else {
+                        }
+                        else
+                        {
                             response.AddRange(minNodes.Take(chainLength - response.Count));
                         }
 
                         minUsage++;
                     }
 
-                    foreach (ChainNodeInfo node in response) {
+                    foreach (ChainNodeInfo node in response)
+                    {
                         node.usageCount++;
                         Log.info("chain node at {0} with usage count {1} added to chain", node.IP, node.usageCount);
                     }
 
                     return response;
                 }
-                else
-                {
-                    throw new ArgumentException("Invalid loadbalancing strategy.");
-                }
-			}
+            }
+            else
+            {
+                throw new ArgumentException("Invalid loadbalancing strategy.");
+            }
 		}
 
 		public void discoverChainNodes()
@@ -236,69 +243,68 @@ namespace OnionRouting
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				// starting -> running
-				//ChainNodeInfo[] startingNodes;
-                //lock (startingChainNodes)
-                //{
-                    //startingNodes = startingChainNodes.ToArray();
-                    //				Log.info("starting nodes: " + startingNodes.Length);
-                lock (DirectoryService.lockObj)
+                if (startingChainNodes.Count > 0)
                 {
-                    for (int i = 0; i < startingChainNodes.Count; i++)
+                    lock (DirectoryService.lockObj)
                     {
-                        if (awsHelper.checkChainNodeState(startingChainNodes[i]) == "running")
+                        for (int i = 0; i < startingChainNodes.Count; i++)
                         {
-                            string url = "http://" + startingChainNodes[i].IP + ":" + startingChainNodes[i].port;
-                            startingChainNodes[i].Url = url;
-
-                            runningChainNodes.Add(startingChainNodes[i]);
-                            Log.info("chain node at " + startingChainNodes[i].IP + " running");
-
-                            startingChainNodes.Remove(startingChainNodes[i]);
-                        }
-                    }
-
-                }
-            
-                // running -> ready
-                for (int i = 0; i < runningChainNodes.Count; i++)
-                {
-                    bool success;
-                    byte[] response = Messaging.sendRecv(runningChainNodes[i].Url + "/key", out success);
-                    if (success)
-                    {
-                        string xml = Encoding.UTF8.GetString(response);
-                        runningChainNodes[i].PublicKeyXml = xml;
-
-
-                        int avg = 0;
-                        int count = 0;
-
-                        lock (DirectoryService.lockObj)
-                        {
-                            if (readyChainNodes.Count > 0)
+                            if (awsHelper.checkChainNodeState(startingChainNodes[i]) == "running")
                             {
-                                foreach (ChainNodeInfo node in readyChainNodes)
-                                {
-                                    avg += node.usageCount;
-                                    count++;
-                                }
-                                avg = avg / count;
+                                string url = "http://" + startingChainNodes[i].IP + ":" + startingChainNodes[i].port;
+                                startingChainNodes[i].Url = url;
+
+                                runningChainNodes.Add(startingChainNodes[i]);
+                                Log.info("chain node at " + startingChainNodes[i].IP + " running");
+
+                                startingChainNodes.Remove(startingChainNodes[i]);
                             }
-
-                            runningChainNodes[i].usageCount = avg;
-                            readyChainNodes.Add(runningChainNodes[i]);
-                            Log.info("chain node at " + runningChainNodes[i].IP + " ready, usage set at average of {0}", avg);
                         }
-                        runningChainNodes.Remove(runningChainNodes[i]);
-                    }
 
-                    else
-                    {
-                        Log.info("chain node at " + runningChainNodes[i].IP + " not yet ready");
                     }
                 }
-             
-                
+
+                // running -> ready
+                if (runningChainNodes.Count > 0)
+                {
+                    for (int i = 0; i < runningChainNodes.Count; i++)
+                    {
+                        bool success;
+                        byte[] response = Messaging.sendRecv(runningChainNodes[i].Url + "/key", out success);
+                        if (success)
+                        {
+                            string xml = Encoding.UTF8.GetString(response);
+                            runningChainNodes[i].PublicKeyXml = xml;
+
+
+                            int avg = 0;
+                            int count = 0;
+
+                            lock (DirectoryService.lockObj)
+                            {
+                                if (readyChainNodes.Count > 0)
+                                {
+                                    foreach (ChainNodeInfo node in readyChainNodes)
+                                    {
+                                        avg += node.usageCount;
+                                        count++;
+                                    }
+                                    avg = avg / count;
+                                }
+
+                                runningChainNodes[i].usageCount = avg;
+                                readyChainNodes.Add(runningChainNodes[i]);
+                                Log.info("chain node at " + runningChainNodes[i].IP + " ready, usage set at average of {0}", avg);
+                            }
+                            runningChainNodes.Remove(runningChainNodes[i]);
+                        }
+
+                        else
+                        {
+                            Log.info("chain node at " + runningChainNodes[i].IP + " not yet ready");
+                        }
+                    }
+                }                
 
 				// wait until our interval has passed or we are explicitly woken up to stop the thread
 				stopwatch.Stop();

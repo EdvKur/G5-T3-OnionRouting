@@ -61,7 +61,7 @@ namespace OnionRouting.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("10000")]
         public int aliveCheckInterval {
             get {
                 return ((int)(this["aliveCheckInterval"]));
