@@ -13,32 +13,35 @@ namespace OnionRouting
 	public class OriginatorService : OnionService
     {
 		static int defaultPort;        
-		static string directoryServiceUrl;
-		static string quoteServiceUrl;
+		static string defaultDirectoryServiceUrl;
+		static string defaultQuoteServiceUrl;
         static string handleUrl;
         static string uiUrl;
+
+		private string directoryServiceUrl;
+		private string quoteServiceUrl;
 
         static OriginatorService()
         {
             defaultPort = Properties.Settings.Default.defaultPort;
-            directoryServiceUrl = Properties.Settings.Default.directoryServiceUrl;
-            quoteServiceUrl = Properties.Settings.Default.quoteServiceUrl;
+			defaultDirectoryServiceUrl = Properties.Settings.Default.directoryServiceUrl;
+			defaultQuoteServiceUrl = Properties.Settings.Default.quoteServiceUrl;
             handleUrl = Properties.Settings.Default.handleUrl;
             uiUrl = Properties.Settings.Default.uiUrl;
         }
+	public OriginatorService(int port)
+		: base(port)
+	{
+		directoryServiceUrl = defaultDirectoryServiceUrl;
+		quoteServiceUrl = defaultQuoteServiceUrl;
+	}
 
-        public OriginatorService(int port)
-            : base(port)
-        {
-
-        }
-                
-		public OriginatorService(int port, string directoryUrl, string quoteUrl)
-			: base(port)
-		{
-            directoryServiceUrl = directoryUrl;
-            quoteServiceUrl = quoteUrl;
-		}
+	public OriginatorService(int port, string directoryUrl, string quoteUrl)
+		: base(port)
+	{
+		directoryServiceUrl = directoryUrl;
+		quoteServiceUrl = quoteUrl;
+	}
 
 		public List<ChainNodeInfo> requestChain()
 		{
