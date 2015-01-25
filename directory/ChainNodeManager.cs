@@ -262,34 +262,41 @@ namespace OnionRouting
                 }
             
                 // running -> ready
-                for (int i = 0; i < runningChainNodes.Count; i++)
+                lock (DirectoryService.lockObj)
                 {
-                    bool success;
-                    byte[] response = Messaging.sendRecv(runningChainNodes[i].Url + "/key", out success);
-                    if (success)
+                    for (int i = 0; i < runningChainNodes.Count; i++)
                     {
-                        string xml = Encoding.UTF8.GetString(response);
-                        runningChainNodes[i].PublicKeyXml = xml;
-
-                        lock (DirectoryService.lockObj)
+                        bool success;
+                        byte[] response = Messaging.sendRecv(runningChainNodes[i].Url + "/key", out success);
+                        if (success)
                         {
+                            string xml = Encoding.UTF8.GetString(response);
+                            runningChainNodes[i].PublicKeyXml = xml;
+
+
                             int avg = 0;
                             int count = 0;
-                            foreach (ChainNodeInfo node in readyChainNodes) {
-                                avg += node.usageCount;
-                                count++;
+
+                            if (readyChainNodes.Count > 0)
+                            {
+                                foreach (ChainNodeInfo node in readyChainNodes)
+                                {
+                                    avg += node.usageCount;
+                                    count++;
+                                }
+                                avg = avg / count;
                             }
-                            avg = avg / count;
 
                             readyChainNodes.Add(runningChainNodes[i]);
                             Log.info("chain node at " + runningChainNodes[i].IP + " ready, usage set at average of {0}", avg);
 
                             runningChainNodes.Remove(runningChainNodes[i]);
                         }
-                    }
-                    else
-                    {
-                        Log.info("chain node at " + runningChainNodes[i].IP + " not yet ready");
+
+                        else
+                        {
+                            Log.info("chain node at " + runningChainNodes[i].IP + " not yet ready");
+                        }
                     }
                 }
                 
