@@ -77,7 +77,7 @@ namespace OnionRouting
 
                         Log.info("minUsage = {0}, minNodes.Count = {1}", minUsage, minNodes.Count);
                         if (minNodes.Count > chainLength) {
-                            response.AddRange(minNodes.OrderBy(x => rng.Next()).Take(chainLength).ToList());
+                            response.AddRange(minNodes.OrderBy(x => rng.Next()).Take(chainLength - response.Count).ToList());
                         } else {
                             response.AddRange(minNodes.Take(chainLength - response.Count));
                         }
@@ -260,21 +260,21 @@ namespace OnionRouting
                 }
             
                 // running -> ready
-                lock (DirectoryService.lockObj)
+                for (int i = 0; i < runningChainNodes.Count; i++)
                 {
-                    for (int i = 0; i < runningChainNodes.Count; i++)
+                    bool success;
+                    byte[] response = Messaging.sendRecv(runningChainNodes[i].Url + "/key", out success);
+                    if (success)
                     {
-                        bool success;
-                        byte[] response = Messaging.sendRecv(runningChainNodes[i].Url + "/key", out success);
-                        if (success)
+                        string xml = Encoding.UTF8.GetString(response);
+                        runningChainNodes[i].PublicKeyXml = xml;
+
+
+                        int avg = 0;
+                        int count = 0;
+
+                        lock (DirectoryService.lockObj)
                         {
-                            string xml = Encoding.UTF8.GetString(response);
-                            runningChainNodes[i].PublicKeyXml = xml;
-
-
-                            int avg = 0;
-                            int count = 0;
-
                             if (readyChainNodes.Count > 0)
                             {
                                 foreach (ChainNodeInfo node in readyChainNodes)
@@ -285,18 +285,19 @@ namespace OnionRouting
                                 avg = avg / count;
                             }
 
+                            runningChainNodes[i].usageCount = avg;
                             readyChainNodes.Add(runningChainNodes[i]);
                             Log.info("chain node at " + runningChainNodes[i].IP + " ready, usage set at average of {0}", avg);
-
-                            runningChainNodes.Remove(runningChainNodes[i]);
                         }
+                        runningChainNodes.Remove(runningChainNodes[i]);
+                    }
 
-                        else
-                        {
-                            Log.info("chain node at " + runningChainNodes[i].IP + " not yet ready");
-                        }
+                    else
+                    {
+                        Log.info("chain node at " + runningChainNodes[i].IP + " not yet ready");
                     }
                 }
+             
                 
 
 				// wait until our interval has passed or we are explicitly woken up to stop the thread
