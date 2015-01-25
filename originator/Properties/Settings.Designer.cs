@@ -67,5 +67,14 @@ namespace OnionRouting.Properties {
                 return ((string)(this["uiUrl"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3000")]
+        public int retryInterval {
+            get {
+                return ((int)(this["retryInterval"]));
+            }
+        }
     }
 }

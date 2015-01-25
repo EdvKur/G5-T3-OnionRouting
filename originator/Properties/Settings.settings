@@ -17,5 +17,8 @@
     <Setting Name="uiUrl" Type="System.String" Scope="Application">
       <Value Profile="(Default)">ui</Value>
     </Setting>
+    <Setting Name="retryInterval" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">3000</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -17,6 +17,7 @@ namespace OnionRouting
 		static string defaultQuoteServiceUrl;
         static string handleUrl;
         static string uiUrl;
+        static int retryInterval;
 
 		private string directoryServiceUrl;
 		private string quoteServiceUrl;
@@ -28,6 +29,7 @@ namespace OnionRouting
 			defaultQuoteServiceUrl = Properties.Settings.Default.quoteServiceUrl;
             handleUrl = Properties.Settings.Default.handleUrl;
             uiUrl = Properties.Settings.Default.uiUrl;
+            retryInterval = Properties.Settings.Default.retryInterval;
         }
 	public OriginatorService(int port)
 		: base(port)
@@ -105,6 +107,8 @@ namespace OnionRouting
 					else
 						Log.error("error routing request ({0}/5 attempts)", retry);
 				}
+
+                Thread.Sleep(retryInterval);
 				retry++;
 			}
 
