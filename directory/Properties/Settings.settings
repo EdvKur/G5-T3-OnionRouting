@@ -44,5 +44,8 @@
     <Setting Name="autoStartChainNodes" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="balancingStrategy" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">balanced</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

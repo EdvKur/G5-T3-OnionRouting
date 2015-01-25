@@ -10,6 +10,7 @@ namespace OnionRouting
     {
 		static int defaultPort;
         static string url;
+        string balancingStrategy; // possible values: random, balanced
         public static Object lockObj = new Object();
 
 		private ChainNodeManager chainNodeManager;
@@ -23,6 +24,7 @@ namespace OnionRouting
 		public DirectoryService(int port)
 			: base(port)
 		{
+            balancingStrategy = Properties.Settings.Default.balancingStrategy;
             chainNodeManager = new ChainNodeManager();
 		}
 
@@ -71,7 +73,7 @@ namespace OnionRouting
 
 			StringBuilder responseData = new StringBuilder();
 
-			var chain = chainNodeManager.getRandomChain();
+			var chain = chainNodeManager.getChain(balancingStrategy);
 			if (chain == null)
 			{
 				response.StatusCode = Messaging.HTTP_SERVICE_UNAVAILABLE;

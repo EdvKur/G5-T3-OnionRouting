@@ -14,6 +14,7 @@ namespace OnionRouting
         public string DNS;
         public string Region;
 		public int port = 8000;
+        public int usageCount;
 
         public String Url;
         private RSAParameters publicKey;
@@ -45,6 +46,7 @@ namespace OnionRouting
             IP = ip;
             DNS = dns;
             Region = region;
+            usageCount = 0;
         }
 
         public ChainNodeInfo()

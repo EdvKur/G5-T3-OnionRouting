@@ -26,10 +26,12 @@ namespace OnionRouting
 		// After the start command has been sent to EC2, the node is considered "starting".
 		// It is "running" once EC2 has reported that it finished booting.
 		// After the node has actually responded to a status request, it is "ready".
-		private List<ChainNodeInfo> startingChainNodes = new List<ChainNodeInfo>();
-		private List<ChainNodeInfo> runningChainNodes = new List<ChainNodeInfo>();
-		private List<ChainNodeInfo> readyChainNodes = new List<ChainNodeInfo>();
-		private Random rng = new Random();
+		private List<ChainNodeInfo> startingChainNodes;
+		private List<ChainNodeInfo> runningChainNodes;
+		private List<ChainNodeInfo> readyChainNodes;
+		private Random rng;
+
+        private Dictionary<string, int> usage;
 
 		private ManualResetEvent stopThreadsEvent = new ManualResetEvent(false);
 		private Thread runningStatusThread = null;
@@ -43,16 +45,58 @@ namespace OnionRouting
             targetChainNodeCount = Properties.Settings.Default.targetChainNodeCount;
             aliveCheckInterval = Properties.Settings.Default.aliveCheckInterval;
             aliveCheckTimeout = Properties.Settings.Default.aliveCheckTimeout;
+
+            startingChainNodes = new List<ChainNodeInfo>();
+		    runningChainNodes = new List<ChainNodeInfo>();
+		    readyChainNodes = new List<ChainNodeInfo>();
+		    rng = new Random();
 		}
 
-		public IEnumerable<ChainNodeInfo> getRandomChain()
+		public IEnumerable<ChainNodeInfo> getChain(string strategy)
 		{
 			lock (readyChainNodes)
 			{
-				if (readyChainNodes.Count < chainLength)
-					return null;
+                if (readyChainNodes.Count < chainLength)
+                {
+                    return null;
+                } else if (strategy == "random")
+                {
+                    return readyChainNodes.OrderBy(x => rng.Next()).Take(chainLength);
+                } else if (strategy == "balanced")
+                {
+                    var minUsage = readyChainNodes.OrderBy(x => x.usageCount).First().usageCount;
+                    Log.info("minimum # of usages: {0}", minUsage);
+                    List<ChainNodeInfo> response = new List<ChainNodeInfo>();
 
-				return readyChainNodes.OrderBy(x => rng.Next()).Take(chainLength);
+                    while (response.Count < chainLength)
+                    {    
+                        var minNodes = readyChainNodes.FindAll(
+                            delegate(ChainNodeInfo info)
+                            {
+                                return info.usageCount == minUsage;
+                            }
+                            );
+
+                        if (minNodes.Count > chainLength) {
+                            response.AddRange(minNodes.OrderBy(x => rng.Next()).Take(chainLength));
+                        } else {
+                            response.AddRange(minNodes);
+                        }
+
+                        minUsage++;
+                    }
+
+                    foreach (ChainNodeInfo node in response) {
+                        node.usageCount++;
+                        Log.info("chain node at {0} with usage count {1} added to chain", node.IP, node.usageCount);
+                    }
+
+                    return response;
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid loadbalancing strategy.");
+                }
 			}
 		}
 
@@ -228,8 +272,16 @@ namespace OnionRouting
 
                         lock (DirectoryService.lockObj)
                         {
+                            int avg = 0;
+                            int count = 0;
+                            foreach (ChainNodeInfo node in runningChainNodes) {
+                                avg += node.usageCount;
+                                count++;
+                            }
+                            avg = avg / count;
+
                             readyChainNodes.Add(runningChainNodes[i]);
-                            Log.info("chain node at " + runningChainNodes[i].IP + " ready");
+                            Log.info("chain node at " + runningChainNodes[i].IP + " ready, usage set at average of {0}", avg);
 
                             runningChainNodes.Remove(runningChainNodes[i]);
                         }

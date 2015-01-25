@@ -148,5 +148,14 @@ namespace OnionRouting.Properties {
                 return ((bool)(this["autoStartChainNodes"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("balanced")]
+        public string balancingStrategy {
+            get {
+                return ((string)(this["balancingStrategy"]));
+            }
+        }
     }
 }
