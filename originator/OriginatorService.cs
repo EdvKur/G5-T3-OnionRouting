@@ -26,11 +26,18 @@ namespace OnionRouting
             handleUrl = Properties.Settings.Default.handleUrl;
             uiUrl = Properties.Settings.Default.uiUrl;
         }
+
+        public OriginatorService(int port)
+            : base(port)
+        {
+
+        }
                 
-		public OriginatorService(int port)
+		public OriginatorService(int port, string directoryUrl, string quoteUrl)
 			: base(port)
 		{
-
+            directoryServiceUrl = directoryUrl;
+            quoteServiceUrl = quoteUrl;
 		}
 
 		public List<ChainNodeInfo> requestChain()
