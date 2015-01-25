@@ -77,8 +77,9 @@ namespace OnionRouting
                             }
                             );
 
+                        Log.info("minUsage = {0}, minNodes.Count = {1}", minUsage, minNodes.Count);
                         if (minNodes.Count > chainLength) {
-                            response.AddRange(minNodes.OrderBy(x => rng.Next()).Take(chainLength));
+                            response.AddRange(minNodes.OrderBy(x => rng.Next()).Take(chainLength).ToList());
                         } else {
                             response.AddRange(minNodes);
                         }
@@ -151,7 +152,7 @@ namespace OnionRouting
 
 		public int countReadyNodes()
 		{
-			lock (readyChainNodes)
+			lock (DirectoryService.lockObj)
 				return readyChainNodes.Count;
 		}
 
@@ -274,7 +275,7 @@ namespace OnionRouting
                         {
                             int avg = 0;
                             int count = 0;
-                            foreach (ChainNodeInfo node in runningChainNodes) {
+                            foreach (ChainNodeInfo node in readyChainNodes) {
                                 avg += node.usageCount;
                                 count++;
                             }

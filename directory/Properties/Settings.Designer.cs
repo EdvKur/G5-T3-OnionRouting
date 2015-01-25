@@ -70,7 +70,7 @@ namespace OnionRouting.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("4000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("10000")]
         public int aliveCheckTimeout {
             get {
                 return ((int)(this["aliveCheckTimeout"]));
