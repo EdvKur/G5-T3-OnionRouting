@@ -10,7 +10,7 @@ In visual studio, just import `OnionRouting.sln` and compile.
 
 When using mono, do
 
-	xcode OnionRouting.sln
+	xbuild OnionRouting.sln
 
 which should create bin directories for each of the services.
 
